@@ -15,4 +15,6 @@ MonoBehaviour:
   transform: {fileID: 11400000, guid: aba512d4e4ae9a847ae14ff3dda1cea6, type: 2}
   startPos: {fileID: 11400000, guid: bd7665888543b5e4a9fd6b2a51283f54, type: 2}
   endPos: {fileID: 11400000, guid: d6173f157a7cd2847869c8ab40a39104, type: 2}
+  horizontalInput: {fileID: 11400000, guid: 632391abc0ba8a647ac2d8df980efbe9, type: 2}
+  verticalInput: {fileID: 11400000, guid: 629f65c41abd7304faa4309a14c33af3, type: 2}
   time: {fileID: 11400000, guid: de52419a815210e4086e4f08bf7c2d07, type: 2}

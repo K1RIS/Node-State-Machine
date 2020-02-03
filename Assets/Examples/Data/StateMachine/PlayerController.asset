@@ -23,11 +23,11 @@ MonoBehaviour:
     endActionsCount: 0
     transitions:
     - conditions:
-      - {fileID: 11400000, guid: 2de0ce3ae559f7c4592f0f812a8e8584, type: 2}
+      - {fileID: 11400000, guid: b1fe58808429bf248b4193dc4c858c16, type: 2}
       conditionsCount: 1
       stateIndex: 1
     - conditions:
-      - {fileID: 11400000, guid: fe62a49200943c0449f62c65ee82f374, type: 2}
+      - {fileID: 11400000, guid: f086ff803c661aa4891d9ef92c4f5d22, type: 2}
       conditionsCount: 1
       stateIndex: 2
     transitionsCount: 2

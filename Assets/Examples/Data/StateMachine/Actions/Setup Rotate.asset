@@ -15,4 +15,5 @@ MonoBehaviour:
   transform: {fileID: 11400000, guid: aba512d4e4ae9a847ae14ff3dda1cea6, type: 2}
   startRot: {fileID: 11400000, guid: a8243e631ff39a84ba31c8877d4689e5, type: 2}
   endRot: {fileID: 11400000, guid: 2eae5e95fadad7a4a80ced85fa87b0f4, type: 2}
+  rotationInput: {fileID: 11400000, guid: 2eacd9f74edaa6948a9ba351bd3f811e, type: 2}
   time: {fileID: 11400000, guid: de52419a815210e4086e4f08bf7c2d07, type: 2}

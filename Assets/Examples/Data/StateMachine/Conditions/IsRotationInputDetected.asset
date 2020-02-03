@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79bf3bd942c888f4e96c44df1d677ef3, type: 3}
-  m_Name: IsRotationMovementDetected
+  m_Name: IsRotationInputDetected
   m_EditorClassIdentifier: 
-  rotationInput:
+  axis:
   - {fileID: 11400000, guid: 2eacd9f74edaa6948a9ba351bd3f811e, type: 2}
