@@ -3,7 +3,7 @@
 namespace StateMachine
 {
     [System.Serializable]
-    public class State
+    public sealed class State
     {
 #if UNITY_EDITOR
         [SerializeField] public string name;

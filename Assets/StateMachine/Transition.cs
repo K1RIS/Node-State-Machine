@@ -3,7 +3,7 @@
 namespace StateMachine
 {
     [System.Serializable]
-    public class Transition
+    public sealed class Transition
     {
         [SerializeField] private Condition[] conditions = new Condition[0];
         [SerializeField] private int conditionsCount = 0;

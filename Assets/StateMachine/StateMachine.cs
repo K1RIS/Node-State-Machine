@@ -3,7 +3,7 @@
 namespace StateMachine
 {
     [CreateAssetMenu(menuName = "StateMachine/Controller")]
-    public class StateMachine : ScriptableObject
+    public sealed class StateMachine : ScriptableObject
     {
         [SerializeField] private State[] states = new State[0];
         [SerializeField] private int startStateIndex = -1;
