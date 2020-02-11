@@ -1,18 +1,19 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace StateMachine
 {
     [CreateAssetMenu(menuName = "StateMachine/Controller")]
-    public sealed class StateMachine : ScriptableObject
+    public sealed class StateMachine : SerializedScriptableObject
     {
-        [SerializeField] private State[] states = new State[0];
-        [SerializeField] private int startStateIndex = -1;
+        private State[] states = new State[0];
+        private int startStateIndex = -1;
 
         [System.NonSerialized] private int currentStateIndex;
         [System.NonSerialized] private int changeStateIndex;
 
         public void OnStart()
-        {
+        { 
             currentStateIndex = startStateIndex;
 
             states[currentStateIndex].OnStart();
@@ -34,6 +35,8 @@ namespace StateMachine
 
         private void ChangeState()
         {
+            Debug.Log(states[changeStateIndex].name);
+
             states[currentStateIndex].OnEnd();
             currentStateIndex = changeStateIndex;
             states[currentStateIndex].OnStart();

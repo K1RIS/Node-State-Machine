@@ -12,55 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6ea09706a9a20f64b90ce082d96b33a2, type: 3}
   m_Name: PlayerController
   m_EditorClassIdentifier: 
-  states:
-  - name: Idle
-    position: {x: 169, y: 359}
-    startActions: []
-    updateActions: []
-    endActions: []
-    startActionsCount: 0
-    updateActionsCount: 0
-    endActionsCount: 0
-    transitions:
-    - conditions:
-      - {fileID: 11400000, guid: b1fe58808429bf248b4193dc4c858c16, type: 2}
-      conditionsCount: 1
-      stateIndex: 1
-    - conditions:
-      - {fileID: 11400000, guid: f086ff803c661aa4891d9ef92c4f5d22, type: 2}
-      conditionsCount: 1
-      stateIndex: 2
-    transitionsCount: 2
-  - name: Rotate
-    position: {x: 489, y: 186}
-    startActions:
-    - {fileID: 11400000, guid: 6884265e5be0239468d1428889794871, type: 2}
-    updateActions:
-    - {fileID: 11400000, guid: be46560db8523d445b3e3b26b21c5394, type: 2}
-    endActions: []
-    startActionsCount: 1
-    updateActionsCount: 1
-    endActionsCount: 0
-    transitions:
-    - conditions:
-      - {fileID: 11400000, guid: 0c033106827af9549833ffe3a670d402, type: 2}
-      conditionsCount: 1
-      stateIndex: 0
-    transitionsCount: 1
-  - name: Move
-    position: {x: 431, y: 494}
-    startActions:
-    - {fileID: 11400000, guid: 54360f794bc77f748abfb973b821a14c, type: 2}
-    updateActions:
-    - {fileID: 11400000, guid: c4af3157f25711d4cb8e07c25e0bea67, type: 2}
-    endActions: []
-    startActionsCount: 1
-    updateActionsCount: 1
-    endActionsCount: 0
-    transitions:
-    - conditions:
-      - {fileID: 11400000, guid: 8e53febe6dd56a4479daae1b2a3f04d6, type: 2}
-      conditionsCount: 1
-      stateIndex: 0
-    transitionsCount: 1
-  startStateIndex: 0
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []

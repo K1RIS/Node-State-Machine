@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 
 namespace StateMachine
 {
@@ -7,15 +8,13 @@ namespace StateMachine
     {
 #if UNITY_EDITOR
         [SerializeField] public string name;
-        [SerializeField] public Vector2 position;
+        [SerializeField, HideInInspector] public Vector2 position;
+
+        private int SetActionsCount() => actionsCount = actions.Length;
 #endif
 
-        [SerializeField] private Action[] startActions = new Action[0];
-        [SerializeField] private Action[] updateActions = new Action[0];
-        [SerializeField] private Action[] endActions = new Action[0];
-        [SerializeField, HideInInspector] private int startActionsCount = 0;
-        [SerializeField, HideInInspector] private int updateActionsCount = 0;
-        [SerializeField, HideInInspector] private int endActionsCount = 0;
+        [SerializeField, OnValueChanged(nameof(SetActionsCount))] private Action[] actions = new Action[0];
+        [SerializeField, HideInInspector] private int actionsCount = 0;
 
         [SerializeField] private Transition[] transitions = new Transition[0];
         [SerializeField, HideInInspector] private int transitionsCount = 0;
@@ -30,18 +29,18 @@ namespace StateMachine
 
         public void OnStart()
         {
-            for (int i = 0; i < startActionsCount; i++)
-                startActions[i].Execute();
+            for (int i = 0; i < actionsCount; i++)
+                actions[i].OnStart();
         }
         public void OnUpdate()
         {
-            for (int i = 0; i < updateActionsCount; i++)
-                updateActions[i].Execute();
+            for (int i = 0; i < actionsCount; i++)
+                actions[i].OnUpdate();
         }
         public void OnEnd()
         {
-            for (int i = 0; i < endActionsCount; i++)
-                endActions[i].Execute();
+            for (int i = 0; i < actionsCount; i++)
+                actions[i].OnEnd();
         }
 
         public int ChackTransitions()

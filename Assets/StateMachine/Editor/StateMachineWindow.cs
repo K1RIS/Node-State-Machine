@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 namespace StateMachine
 {
-    public class StateMachineWindow : EditorWindow
-    {
-        public static event System.Action<int> OnStateSelected;
-
+    public class StateMachineWindow : OdinEditorWindow
+    {      
         private readonly Vector2 STATE_SIZE = new Vector2(150f, 50f);
 
         private GUIStyle startStateStyle;
@@ -22,6 +22,18 @@ namespace StateMachine
         private Vector2 scrollOffset = Vector2.zero;
         private int draggingStateIndex = -1;
         private int creatingTransitionFromStateIndex = -1;
+
+        [OnOpenAsset(0)]
+        public static bool OnOpen(int instanceID, int line)
+        {
+            StateMachine statemachine = EditorUtility.InstanceIDToObject(instanceID) as StateMachine;
+            if (statemachine != null)
+            {
+                OpenWindow(statemachine);
+                return true;
+            }
+            return false;
+        }
 
         [MenuItem("Window/State Machine")]
         private static void OpenWindow()
@@ -38,12 +50,14 @@ namespace StateMachine
             window.minSize = new Vector2(800, 600);
             window.stateMachine = stateMachine;
 
-            window.states = new List<State>(window.GetStates());
-            window.startStateIndex = window.GetStartStateIndex();
+            window.states = new List<State>(StateMachineReflections.GetStates(stateMachine));
+            window.startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
         }
-
-        private void OnEnable()
+        
+        protected override void OnEnable()
         {
+            base.OnEnable();
+
             startStateStyle = new GUIStyle();
             startStateStyle.normal.background = EditorGUIUtility.Load("builtin skins/darkskin/images/node5.png") as Texture2D;
             startStateStyle.border = new RectOffset(12, 12, 12, 12);
@@ -55,8 +69,10 @@ namespace StateMachine
             normalStateStyle.alignment = TextAnchor.MiddleCenter;
         }
 
-        private void OnGUI()
+        protected override void OnGUI()
         {
+            base.OnGUI();
+
             DrawGrid(20, 0.2f, Color.gray);
             DrawGrid(100, 0.4f, Color.gray);
             DrawNodes();
@@ -99,8 +115,8 @@ namespace StateMachine
         private void DrawTransitions()
         {
             foreach (State state in states)
-                foreach (Transition transition in GetTransitions(state))
-                    DrawBezier(GetBezierStartPosition(state.position), GetBezierEndPosition(states[GetTransitionStateIndex(transition)].position));
+                foreach (Transition transition in StateMachineReflections.GetTransitions(state))
+                    DrawBezier(GetBezierStartPosition(state.position), GetBezierEndPosition(states[StateMachineReflections.GetTransitionStateIndex(transition)].position));
         }
 
         private void DrawCreatingTransition(Vector2 mousePosition)
@@ -149,8 +165,8 @@ namespace StateMachine
                 case EventType.ValidateCommand:
                     if (e.commandName == "UndoRedoPerformed")
                     {
-                        states = new List<State>(GetStates());
-                        startStateIndex = GetStartStateIndex();
+                        states = new List<State>(StateMachineReflections.GetStates(stateMachine));
+                        startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
                         GUI.changed = true;
                     }
                     break;
@@ -189,22 +205,19 @@ namespace StateMachine
 
         private void SelectState(int indexState)
         {
-            if (indexState != -1)
-            {
-                Selection.activeObject = stateMachine;
-                OnStateSelected?.Invoke(indexState);
-            }
+            if (indexState > -1 && indexState < states.Count)
+                InspectObject(states[indexState]);
         }
 
         private void CreateState(Vector2 mousePosition)
         {
             Undo.RegisterCompleteObjectUndo(stateMachine, "State Created");
 
-            states.Add(new State("State " + states.Count, mousePosition));
-            SetStates(states.ToArray());
+            states.Add(new State("New State", mousePosition));
+            StateMachineReflections.SetStates(stateMachine, states.ToArray());
 
             if (states.Count == 1)
-                SetStartStateIndex(startStateIndex = 0);
+                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = 0);
         }
 
         private void DeleteState(int stateIndex)
@@ -214,10 +227,10 @@ namespace StateMachine
             RebuildTransitions(stateIndex);
 
             states.RemoveAt(stateIndex);
-            SetStates(states.ToArray());
+            StateMachineReflections.SetStates(stateMachine, states.ToArray());
 
             if (startStateIndex == stateIndex)
-                SetStartStateIndex(startStateIndex = states.Count > 0 ? 0 : -1);
+                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = states.Count > 0 ? 0 : -1);
         }
 
         private void RebuildTransitions(int stateToDeleteIndex)
@@ -226,25 +239,25 @@ namespace StateMachine
 
             foreach (State state in states)
             {
-                transitions = new List<Transition>(GetTransitions(state));
+                transitions = new List<Transition>(StateMachineReflections.GetTransitions(state));
 
                 for (int i = 0; i < transitions.Count; i++)
                 {
-                    int transitionStateIndex = GetTransitionStateIndex(transitions[i]);
+                    int transitionStateIndex = StateMachineReflections.GetTransitionStateIndex(transitions[i]);
 
                     if (transitionStateIndex == stateToDeleteIndex)
                         transitions.RemoveAt(i--);
                     else if (transitionStateIndex > stateToDeleteIndex)
-                        SetTransitionStateIndex(transitions[i], transitionStateIndex - 1);
+                        StateMachineReflections.SetTransitionStateIndex(stateMachine, transitions[i], transitionStateIndex - 1);
                 }
 
-                SetTransitions(state, transitions.ToArray());
+                StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
             }
         }
 
         private void SetAsStartState(int stateIndex)
         {
-            SetStartStateIndex(startStateIndex = stateIndex);
+            StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = stateIndex);
         }
 
         private void StartCreatingTransition(int stateIndex)
@@ -256,13 +269,13 @@ namespace StateMachine
         {
             int stateIndex = GetStateIndex(mousePosition);
 
-            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex && !GetTransitions(states[creatingTransitionFromStateIndex]).Any(t => GetTransitionStateIndex(t) == stateIndex))
+            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex && !StateMachineReflections.GetTransitions(states[creatingTransitionFromStateIndex]).Any(t => StateMachineReflections.GetTransitionStateIndex(t) == stateIndex))
             {
                 Undo.RegisterCompleteObjectUndo(stateMachine, "Transition Created");
 
-                List<Transition> newTransitions = new List<Transition>(GetTransitions(states[creatingTransitionFromStateIndex]));
+                List<Transition> newTransitions = new List<Transition>(StateMachineReflections.GetTransitions(states[creatingTransitionFromStateIndex]));
                 newTransitions.Add(new Transition(stateIndex));
-                SetTransitions(states[creatingTransitionFromStateIndex], newTransitions.ToArray());
+                StateMachineReflections.SetTransitions(stateMachine, states[creatingTransitionFromStateIndex], newTransitions.ToArray());
             }
         }
 
@@ -272,17 +285,17 @@ namespace StateMachine
 
             foreach (State state in states)
             {
-                List<Transition> transitions = new List<Transition>(GetTransitions(state));
+                List<Transition> transitions = new List<Transition>(StateMachineReflections.GetTransitions(state));
 
                 for (int i = 0; i < transitions.Count; i++)
                     if (transitions[i] == transitionToDelete)
                     {
                         transitions.RemoveAt(i);
-                        SetTransitions(state, transitions.ToArray());
+                        StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
                         return;
                     }
 
-                SetTransitions(state, transitions.ToArray());
+                StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
             }
         }
 
@@ -333,9 +346,9 @@ namespace StateMachine
             Transition closestTransition = null;
 
             foreach (State state in states)
-                foreach (Transition transition in GetTransitions(state))
+                foreach (Transition transition in StateMachineReflections.GetTransitions(state))
                 {
-                    float dist = GetDistanceToBezier(mousePosition, state.position, states[GetTransitionStateIndex(transition)].position);
+                    float dist = GetDistanceToBezier(mousePosition, state.position, states[StateMachineReflections.GetTransitionStateIndex(transition)].position);
 
                     if (dist < minDist)
                     {
@@ -373,49 +386,6 @@ namespace StateMachine
                 null,
                 10f
             );
-        }
-        #endregion
-
-        #region Reflecion Getters Setters
-        private State[] GetStates()
-        {
-            return (State[])typeof(StateMachine).GetField("states", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
-        }
-        private void SetStates(State[] states)
-        {
-            typeof(StateMachine).GetField("states", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, states);
-            EditorUtility.SetDirty(stateMachine);
-        }
-
-        private int GetStartStateIndex()
-        {
-            return (int)typeof(StateMachine).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
-        }
-        private void SetStartStateIndex(int index)
-        {
-            typeof(StateMachine).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, index);
-            EditorUtility.SetDirty(stateMachine);
-        }
-
-        private Transition[] GetTransitions(State state)
-        {
-            return (Transition[])typeof(State).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(state);
-        }
-        private void SetTransitions(State state, Transition[] transitions)
-        {
-            typeof(State).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(state, transitions);
-            typeof(State).GetField("transitionsCount", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(state, transitions.Length);
-            EditorUtility.SetDirty(stateMachine);
-        }
-
-        private int GetTransitionStateIndex(Transition transition)
-        {
-            return (int)typeof(Transition).GetField("stateIndex", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(transition);
-        }
-        private void SetTransitionStateIndex(Transition transition, int index)
-        {
-            typeof(Transition).GetField("stateIndex", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(transition, index);
-            EditorUtility.SetDirty(stateMachine);
         }
         #endregion
     }
