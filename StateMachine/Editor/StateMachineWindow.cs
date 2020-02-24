@@ -36,7 +36,7 @@ namespace StateMachine
                 public Condition[] GetConditions() => conditions;
             }
 
-            private StateMachine stateMachine;
+            private StateMachineController stateMachine;
             private int stateIndex;
 
             [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
@@ -45,7 +45,7 @@ namespace StateMachine
             private Transition[] transitions;
 
 
-            public State(StateMachine stateMachine, int stateIndex)
+            public State(StateMachineController stateMachine, int stateIndex)
             {
                 this.stateMachine = stateMachine;
                 this.stateIndex = stateIndex;
@@ -90,7 +90,7 @@ namespace StateMachine
         private GUIStyle startStateStyle;
         private GUIStyle normalStateStyle;
 
-        private StateMachine stateMachine;
+        private StateMachineController stateMachine;
         private int statesCount;
         private List<string> names = new List<string>();
         private List<Vector2> positions = new List<Vector2>();
@@ -104,7 +104,7 @@ namespace StateMachine
         [UnityEditor.Callbacks.OnOpenAsset(0)]
         public static bool OnOpen(int instanceID, int line)
         {
-            StateMachine statemachine = EditorUtility.InstanceIDToObject(instanceID) as StateMachine;
+            StateMachineController statemachine = EditorUtility.InstanceIDToObject(instanceID) as StateMachineController;
             if (statemachine != null)
             {
                 OpenWindow(statemachine);
@@ -121,7 +121,7 @@ namespace StateMachine
             window.minSize = new Vector2(800, 600);
         }
 
-        public static void OpenWindow(StateMachine stateMachine)
+        public static void OpenWindow(StateMachineController stateMachine)
         {
             StateMachineWindow window = GetWindow<StateMachineWindow>();
             window.titleContent = new GUIContent("State Machine");

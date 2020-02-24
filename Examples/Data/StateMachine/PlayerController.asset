@@ -228,9 +228,24 @@ MonoBehaviour:
       Data: 15|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
-      Data: 0
+      Data: 1
+    - Name: 
+      Entry: 7
+      Data: 16|IsAxisInputDetected, Assembly-CSharp
+    - Name: axis
+      Entry: 7
+      Data: 17|FloatRuntimeVariable[], Assembly-CSharp
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
+      Entry: 10
+      Data: 6
     - Name: 
       Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
       Data: 
     - Name: 
       Entry: 8
@@ -242,20 +257,26 @@ MonoBehaviour:
       Entry: 8
       Data: 
     - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
       Entry: 7
-      Data: 16|StateMachine.Condition[][], Assembly-CSharp
+      Data: 18|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 17|StateMachine.Condition[], Assembly-CSharp
+      Data: 19|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 18|IsAnimationEnd, Assembly-CSharp
+      Data: 20|IsAnimationEnd, Assembly-CSharp
     - Name: duration
       Entry: 10
       Data: 1
@@ -279,19 +300,19 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: 19|StateMachine.Condition[][], Assembly-CSharp
+      Data: 21|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 20|StateMachine.Condition[], Assembly-CSharp
+      Data: 22|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 21|IsAnimationEnd, Assembly-CSharp
+      Data: 23|IsAnimationEnd, Assembly-CSharp
     - Name: duration
       Entry: 10
       Data: 5

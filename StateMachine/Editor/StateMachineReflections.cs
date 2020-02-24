@@ -5,43 +5,43 @@ namespace StateMachine
 {
     public static class StateMachineReflections
     {
-        public static int[][] GetTransitions(StateMachine stateMachine)
+        public static int[][] GetTransitions(StateMachineController stateMachine)
         {
-            return (int[][])typeof(StateMachine).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (int[][])typeof(StateMachineController).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetTransitions(StateMachine stateMachine, int[][] transitionsIndexes)
+        public static void SetTransitions(StateMachineController stateMachine, int[][] transitionsIndexes)
         {
-            typeof(StateMachine).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, transitionsIndexes);
+            typeof(StateMachineController).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, transitionsIndexes);
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static int GetStartStateIndex(StateMachine stateMachine)
+        public static int GetStartStateIndex(StateMachineController stateMachine)
         {
-            return (int)typeof(StateMachine).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (int)typeof(StateMachineController).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetStartStateIndex(StateMachine stateMachine, int index)
+        public static void SetStartStateIndex(StateMachineController stateMachine, int index)
         {
-            typeof(StateMachine).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, index);
+            typeof(StateMachineController).GetField("startStateIndex", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, index);
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static Action[][] GetActions(StateMachine stateMachine)
+        public static Action[][] GetActions(StateMachineController stateMachine)
         {
-            return (Action[][])typeof(StateMachine).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (Action[][])typeof(StateMachineController).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetActions(StateMachine stateMachine, Action[][] actions)
+        public static void SetActions(StateMachineController stateMachine, Action[][] actions)
         {
-            typeof(StateMachine).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, actions);
+            typeof(StateMachineController).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, actions);
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static Condition[][][] GetConditions(StateMachine stateMachine)
+        public static Condition[][][] GetConditions(StateMachineController stateMachine)
         {
-            return (Condition[][][])typeof(StateMachine).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (Condition[][][])typeof(StateMachineController).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetConditions(StateMachine stateMachine, Condition[][][] conditions)
+        public static void SetConditions(StateMachineController stateMachine, Condition[][][] conditions)
         {
-            typeof(StateMachine).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, conditions);
+            typeof(StateMachineController).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, conditions);
             EditorUtility.SetDirty(stateMachine);
         }
     }
