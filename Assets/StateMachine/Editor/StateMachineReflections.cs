@@ -5,13 +5,13 @@ namespace StateMachine
 {
     public static class StateMachineReflections
     {
-        public static State[] GetStates(StateMachine stateMachine)
+        public static int[][] GetTransitions(StateMachine stateMachine)
         {
-            return (State[])typeof(StateMachine).GetField("states", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (int[][])typeof(StateMachine).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetStates(StateMachine stateMachine, State[] states)
+        public static void SetTransitions(StateMachine stateMachine, int[][] transitionsIndexes)
         {
-            typeof(StateMachine).GetField("states", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, states);
+            typeof(StateMachine).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, transitionsIndexes);
             EditorUtility.SetDirty(stateMachine);
         }
 
@@ -25,40 +25,24 @@ namespace StateMachine
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static Transition[] GetTransitions(State state)
+        public static Action[][] GetActions(StateMachine stateMachine)
         {
-            return (Transition[])typeof(State).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(state);
+            return (Action[][])typeof(StateMachine).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetTransitions(StateMachine stateMachine, State state, Transition[] transitions)
+        public static void SetActions(StateMachine stateMachine, Action[][] actions)
         {
-            typeof(State).GetField("transitions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(state, transitions);
-            typeof(State).GetField("transitionsCount", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(state, transitions.Length);
+            typeof(StateMachine).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, actions);
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static int GetTransitionStateIndex(Transition transition)
+        public static Condition[][][] GetConditions(StateMachine stateMachine)
         {
-            return (int)typeof(Transition).GetField("stateIndex", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(transition);
+            return (Condition[][][])typeof(StateMachine).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
-        public static void SetTransitionStateIndex(StateMachine stateMachine, Transition transition, int index)
+        public static void SetConditions(StateMachine stateMachine, Condition[][][] conditions)
         {
-            typeof(Transition).GetField("stateIndex", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(transition, index);
+            typeof(StateMachine).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, conditions);
             EditorUtility.SetDirty(stateMachine);
-        }
-
-        public static Action[] GetActions(State state)
-        {
-            return (Action[])typeof(State).GetField("startActions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(state);
-        }
-        public static void SetActions(StateMachine stateMachine, State state, Action[] actions)
-        {
-            typeof(State).GetField("startActions", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(state, actions);
-            EditorUtility.SetDirty(stateMachine);
-        }
-
-        public static Condition[] GetConditions(Transition transition)
-        {
-            return (Condition[])typeof(Transition).GetField("conditions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(transition);
         }
     }
 }

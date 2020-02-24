@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 
-[CreateAssetMenu(menuName = "StateMachine/Condition/IsAxisInputDetected")]
 public class IsAxisInputDetected : StateMachine.Condition
 {
-    [SerializeField] private FloatRuntimeVariable[] axis = null;
+    [SerializeField] private FloatRuntimeVariable[] axis = new FloatRuntimeVariable[0];
 
     public override bool Check()
     {

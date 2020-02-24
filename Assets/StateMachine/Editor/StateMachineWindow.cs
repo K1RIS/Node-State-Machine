@@ -1,29 +1,107 @@
 ﻿using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities.Editor;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Callbacks;
 using UnityEngine;
 
 namespace StateMachine
 {
     public class StateMachineWindow : OdinEditorWindow
-    {      
+    {
+        private class State
+        {
+            [Serializable]
+            private class Transition
+            {
+                private string transitionTo;
+                [ShowInInspector, ValueDropdown(nameof(GetUniqueConditions))] private Condition[] conditions;
+
+                public Transition(string transitionTo, Condition[] conditions)
+                {
+                    this.transitionTo = transitionTo;
+                    this.conditions = conditions;
+                }
+
+                private IEnumerable<Condition> GetUniqueConditions()
+                {
+                    return typeof(Condition).Assembly.GetTypes()
+                        .Where(t => t.IsSubclassOf(typeof(Condition)))
+                        .Where(t => !conditions.Any(i => i.GetType() == t))
+                        .Select(x => (Condition)Activator.CreateInstance(x));
+                }
+
+                public Condition[] GetConditions() => conditions;
+            }
+
+            private StateMachine stateMachine;
+            private int stateIndex;
+
+            [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
+            [ShowInInspector, OnValueChanged(nameof(SaveActions)), ValueDropdown(nameof(GetUniqueActions))] private Action[] actions;
+            [ShowInInspector, OnValueChanged(nameof(SaveConditions)), ListDrawerSettings(DraggableItems = false, HideAddButton = true, HideRemoveButton = true, ListElementLabelName = "transitionTo")]
+            private Transition[] transitions;
+
+
+            public State(StateMachine stateMachine, int stateIndex)
+            {
+                this.stateMachine = stateMachine;
+                this.stateIndex = stateIndex;
+
+                name = stateMachine.names[stateIndex];
+
+                actions = StateMachineReflections.GetActions(stateMachine)[stateIndex];
+
+                int[] transitionsIndexes = StateMachineReflections.GetTransitions(stateMachine)[stateIndex];
+                Condition[][] transitionConditions = StateMachineReflections.GetConditions(stateMachine)[stateIndex];
+                transitions = new Transition[transitionsIndexes.Length];
+                for (int i = 0; i < transitionsIndexes.Length; i++)
+                    transitions[i] = new Transition(stateMachine.names[transitionsIndexes[i]], transitionConditions[i]);
+            }
+
+            private void SaveName() => stateMachine.names[stateIndex] = name;
+            private IEnumerable<Action> GetUniqueActions()
+            {
+                return typeof(Action).Assembly.GetTypes()
+                    .Where(t => t.IsSubclassOf(typeof(Action)))
+                    .Where(t => !actions.Any(i => i.GetType() == t))
+                    .Select(x => (Action)Activator.CreateInstance(x));
+            }
+            private void SaveActions()
+            {
+                Action[][] actions = StateMachineReflections.GetActions(stateMachine);
+                actions[stateIndex] = this.actions;
+                StateMachineReflections.SetActions(stateMachine, actions);
+            }
+
+            [Button]
+            private void SaveConditions()
+            {
+                Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
+                conditions[stateIndex] = transitions.Select(i => i.GetConditions()).ToArray();
+                StateMachineReflections.SetConditions(stateMachine, conditions);
+            }
+        }
+
         private readonly Vector2 STATE_SIZE = new Vector2(150f, 50f);
 
         private GUIStyle startStateStyle;
         private GUIStyle normalStateStyle;
 
         private StateMachine stateMachine;
-        private List<State> states = new List<State>();
+        private int statesCount;
+        private List<string> names = new List<string>();
+        private List<Vector2> positions = new List<Vector2>();
+        [SerializeField, HideInInspector] private List<List<int>> transitions = new List<List<int>>();
         private int startStateIndex;
 
         private Vector2 scrollOffset = Vector2.zero;
         private int draggingStateIndex = -1;
         private int creatingTransitionFromStateIndex = -1;
 
-        [OnOpenAsset(0)]
+        [UnityEditor.Callbacks.OnOpenAsset(0)]
         public static bool OnOpen(int instanceID, int line)
         {
             StateMachine statemachine = EditorUtility.InstanceIDToObject(instanceID) as StateMachine;
@@ -50,10 +128,13 @@ namespace StateMachine
             window.minSize = new Vector2(800, 600);
             window.stateMachine = stateMachine;
 
-            window.states = new List<State>(StateMachineReflections.GetStates(stateMachine));
+            window.statesCount = stateMachine.statesCount;
+            window.names = new List<string>(stateMachine.names);
+            window.positions = new List<Vector2>(stateMachine.positions);
+            window.transitions = new List<List<int>>(StateMachineReflections.GetTransitions(stateMachine).Select(i => i.ToList()));
             window.startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
         }
-        
+
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -108,15 +189,15 @@ namespace StateMachine
 
         private void DrawNodes()
         {
-            for (int i = 0; i < states.Count; i++)
-                GUI.Box(new Rect(states[i].position, STATE_SIZE), states[i].name, i == startStateIndex ? startStateStyle : normalStateStyle);
+            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+                GUI.Box(new Rect(positions[stateIndex], STATE_SIZE), names[stateIndex], stateIndex == startStateIndex ? startStateStyle : normalStateStyle);
         }
 
         private void DrawTransitions()
         {
-            foreach (State state in states)
-                foreach (Transition transition in StateMachineReflections.GetTransitions(state))
-                    DrawBezier(GetBezierStartPosition(state.position), GetBezierEndPosition(states[StateMachineReflections.GetTransitionStateIndex(transition)].position));
+            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+                for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
+                    DrawBezier(GetBezierStartPosition(positions[stateIndex]), GetBezierEndPosition(positions[transitions[stateIndex][transitionIndex]]));
         }
 
         private void DrawCreatingTransition(Vector2 mousePosition)
@@ -124,7 +205,7 @@ namespace StateMachine
             if (creatingTransitionFromStateIndex == -1)
                 return;
 
-            DrawBezier(GetBezierStartPosition(states[creatingTransitionFromStateIndex].position), mousePosition);
+            DrawBezier(GetBezierStartPosition(positions[creatingTransitionFromStateIndex]), mousePosition);
             GUI.changed = true;
         }
         #endregion
@@ -137,7 +218,7 @@ namespace StateMachine
                     if (e.button == 0)
                     {
                         if (creatingTransitionFromStateIndex != -1)
-                            EndCreatingTransition(e.mousePosition);
+                            CreateTransition(e.mousePosition);
                         else
                         {
                             SelectState(GetStateIndex(e.mousePosition));
@@ -165,8 +246,8 @@ namespace StateMachine
                 case EventType.ValidateCommand:
                     if (e.commandName == "UndoRedoPerformed")
                     {
-                        states = new List<State>(StateMachineReflections.GetStates(stateMachine));
-                        startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
+                        //states = new List<State>(StateMachineReflections.GetStates(stateMachine));
+                        //startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
                         GUI.changed = true;
                     }
                     break;
@@ -181,17 +262,17 @@ namespace StateMachine
 
             if (stateIndex != -1)
             {
-                genericMenu.AddItem(new GUIContent("Create Transition"), false, () => StartCreatingTransition(stateIndex));
-                genericMenu.AddItem(new GUIContent("Set as Start State"), false, () => SetAsStartState(stateIndex));
+                genericMenu.AddItem(new GUIContent("Create Transition"), false, () => creatingTransitionFromStateIndex = stateIndex);
+                genericMenu.AddItem(new GUIContent("Set as Start State"), false, () => StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = stateIndex));
                 genericMenu.AddItem(new GUIContent("Delete State"), false, () => DeleteState(stateIndex));
             }
             else
             {
-                Transition transition = GetTransition(mousePosition);
+                Vector2Int transition = GetTransition(mousePosition);
 
-                if (transition != null)
+                if (transition != new Vector2Int(-1, -1))
                 {
-                    genericMenu.AddItem(new GUIContent("Delete Transition"), false, () => DeleteTransition(transition));
+                    genericMenu.AddItem(new GUIContent("Delete Transition"), false, () => DeleteTransition(transition.x, transition.y));
                 }
                 else
                 {
@@ -205,18 +286,27 @@ namespace StateMachine
 
         private void SelectState(int indexState)
         {
-            if (indexState > -1 && indexState < states.Count)
-                InspectObject(states[indexState]);
+            if (indexState != -1)
+                InspectObjectInDropDown(new State(stateMachine, indexState));
         }
 
         private void CreateState(Vector2 mousePosition)
         {
             Undo.RegisterCompleteObjectUndo(stateMachine, "State Created");
 
-            states.Add(new State("New State", mousePosition));
-            StateMachineReflections.SetStates(stateMachine, states.ToArray());
+            statesCount++;
+            names.Add("New State");
+            positions.Add(mousePosition);
+            transitions.Add(new List<int>());
 
-            if (states.Count == 1)
+            List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
+            actions.Add(new Action[0]);
+            List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
+            conditions.Add(new Condition[0][]);
+
+            SaveStateMachine(actions.ToArray(), conditions.ToArray());
+
+            if (statesCount == 1)
                 StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = 0);
         }
 
@@ -224,85 +314,81 @@ namespace StateMachine
         {
             Undo.RegisterCompleteObjectUndo(stateMachine, "State Deleted");
 
-            RebuildTransitions(stateIndex);
+            DeleteStateReferencesInTransitions(stateIndex);
 
-            states.RemoveAt(stateIndex);
-            StateMachineReflections.SetStates(stateMachine, states.ToArray());
+            statesCount--;
+            names.RemoveAt(stateIndex);
+            positions.RemoveAt(stateIndex);
+            transitions.RemoveAt(stateIndex);
+
+            List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
+            actions.RemoveAt(stateIndex);
+            List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
+            conditions.RemoveAt(stateIndex);
+
+            SaveStateMachine(actions.ToArray(), conditions.ToArray());
 
             if (startStateIndex == stateIndex)
-                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = states.Count > 0 ? 0 : -1);
+                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = statesCount > 0 ? 0 : -1);
         }
 
-        private void RebuildTransitions(int stateToDeleteIndex)
+        private void DeleteStateReferencesInTransitions(int stateIndexToDelete)
         {
-            List<Transition> transitions;
+            Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
 
-            foreach (State state in states)
-            {
-                transitions = new List<Transition>(StateMachineReflections.GetTransitions(state));
+            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+                for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
+                    if (transitions[stateIndex][transitionIndex] == stateIndexToDelete)
+                    {
+                        transitions[stateIndex].RemoveAt(transitionIndex);
 
-                for (int i = 0; i < transitions.Count; i++)
-                {
-                    int transitionStateIndex = StateMachineReflections.GetTransitionStateIndex(transitions[i]);
+                        List<Condition[]> stateConditions = new List<Condition[]>(conditions[transitionIndex]);
+                        stateConditions.RemoveAt(transitionIndex);
+                        conditions[transitionIndex] = stateConditions.ToArray();
 
-                    if (transitionStateIndex == stateToDeleteIndex)
-                        transitions.RemoveAt(i--);
-                    else if (transitionStateIndex > stateToDeleteIndex)
-                        StateMachineReflections.SetTransitionStateIndex(stateMachine, transitions[i], transitionStateIndex - 1);
-                }
+                        transitionIndex--;
+                    }
 
-                StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
-            }
+            StateMachineReflections.SetConditions(stateMachine, conditions);
         }
 
-        private void SetAsStartState(int stateIndex)
-        {
-            StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = stateIndex);
-        }
-
-        private void StartCreatingTransition(int stateIndex)
-        {
-            creatingTransitionFromStateIndex = stateIndex;
-        }
-
-        private void EndCreatingTransition(Vector2 mousePosition)
+        private void CreateTransition(Vector2 mousePosition)
         {
             int stateIndex = GetStateIndex(mousePosition);
 
-            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex && !StateMachineReflections.GetTransitions(states[creatingTransitionFromStateIndex]).Any(t => StateMachineReflections.GetTransitionStateIndex(t) == stateIndex))
+            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex && !transitions[creatingTransitionFromStateIndex].Any(t => t == stateIndex))
             {
                 Undo.RegisterCompleteObjectUndo(stateMachine, "Transition Created");
 
-                List<Transition> newTransitions = new List<Transition>(StateMachineReflections.GetTransitions(states[creatingTransitionFromStateIndex]));
-                newTransitions.Add(new Transition(stateIndex));
-                StateMachineReflections.SetTransitions(stateMachine, states[creatingTransitionFromStateIndex], newTransitions.ToArray());
+                transitions[creatingTransitionFromStateIndex].Add(stateIndex);
+                StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
+
+                Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
+                List<Condition[]> stateConditions = new List<Condition[]>(conditions[creatingTransitionFromStateIndex]);
+                stateConditions.Add(new Condition[0]);
+                conditions[creatingTransitionFromStateIndex] = stateConditions.ToArray();
+                StateMachineReflections.SetConditions(stateMachine, conditions);
             }
         }
 
-        private void DeleteTransition(Transition transitionToDelete)
+        private void DeleteTransition(int stateIndex, int transitionIndex)
         {
             Undo.RegisterCompleteObjectUndo(stateMachine, "Transition Deleted");
 
-            foreach (State state in states)
-            {
-                List<Transition> transitions = new List<Transition>(StateMachineReflections.GetTransitions(state));
+            transitions[stateIndex].RemoveAt(transitionIndex);
+            StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
 
-                for (int i = 0; i < transitions.Count; i++)
-                    if (transitions[i] == transitionToDelete)
-                    {
-                        transitions.RemoveAt(i);
-                        StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
-                        return;
-                    }
-
-                StateMachineReflections.SetTransitions(stateMachine, state, transitions.ToArray());
-            }
+            Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
+            List<Condition[]> stateConditions = new List<Condition[]>(conditions[stateIndex]);
+            stateConditions.RemoveAt(transitionIndex);
+            conditions[stateIndex] = stateConditions.ToArray();
+            StateMachineReflections.SetConditions(stateMachine, conditions);
         }
 
         private void ResetPanning()
         {
-            foreach (State state in states)
-                state.position -= scrollOffset;
+            for (int i = 0; i < statesCount; i++)
+                positions[i] -= scrollOffset;
 
             scrollOffset = Vector2.zero;
         }
@@ -311,7 +397,7 @@ namespace StateMachine
         {
             Undo.RegisterCompleteObjectUndo(stateMachine, "State Moved");
 
-            states[draggingStateIndex].position += delta;
+            positions[draggingStateIndex] += delta;
 
             GUI.changed = true;
         }
@@ -320,45 +406,53 @@ namespace StateMachine
         {
             scrollOffset += delta;
 
-            foreach (State state in states)
-                state.position += delta;
+            for (int i = 0; i < statesCount; i++)
+                positions[i] += delta;
 
             GUI.changed = true;
         }
 
         #region Helpers
+        private void SaveStateMachine(Action[][] actions, Condition[][][] conditions)
+        {
+            stateMachine.statesCount = statesCount;
+            stateMachine.names = names.ToArray();
+            stateMachine.positions = positions.ToArray();
+            StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
+            StateMachineReflections.SetActions(stateMachine, actions);
+            StateMachineReflections.SetConditions(stateMachine, conditions);
+        }
+
         private int GetStateIndex(Vector2 mousePosition)
         {
-            foreach (State state in states)
-                if (new Rect(state.position, STATE_SIZE).Contains(mousePosition))
-                {
-                    int index = states.IndexOf(state);
-                    if (index != -1)
-                        return index;
-                }
+            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+                if (new Rect(positions[stateIndex], STATE_SIZE).Contains(mousePosition))
+                    return stateIndex;
 
             return -1;
         }
 
-        private Transition GetTransition(Vector2 mousePosition)
+        private Vector2Int GetTransition(Vector2 mousePosition)
         {
             float minDist = 5f;
-            Transition closestTransition = null;
+            Vector2Int stateAndTransitionIndex = new Vector2Int(-1, -1);
 
-            foreach (State state in states)
-                foreach (Transition transition in StateMachineReflections.GetTransitions(state))
+            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+                for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
                 {
-                    float dist = GetDistanceToBezier(mousePosition, state.position, states[StateMachineReflections.GetTransitionStateIndex(transition)].position);
+                    float dist = GetDistanceToBezier(mousePosition, positions[stateIndex], positions[transitions[stateIndex][transitionIndex]]);
 
                     if (dist < minDist)
                     {
                         minDist = dist;
-                        closestTransition = transition;
+                        stateAndTransitionIndex.x = stateIndex;
+                        stateAndTransitionIndex.y = transitionIndex;
                     }
                 }
 
-            return closestTransition;
+            return stateAndTransitionIndex;
         }
+
         private float GetDistanceToBezier(Vector2 mousePosition, Vector2 startPos, Vector2 endPos)
         {
             return HandleUtility.DistancePointBezier

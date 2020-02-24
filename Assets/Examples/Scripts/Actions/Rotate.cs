@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-[CreateAssetMenu(menuName = "StateMachine/Action/Rotate")]
 public class Rotate : StateMachine.Action
 {
     [SerializeField] private TransformRuntimeVariable transform = null;
@@ -9,8 +7,8 @@ public class Rotate : StateMachine.Action
     [SerializeField] private FloatRuntimeVariable time = null;
     [SerializeField] private FloatRuntimeVariable rotationInput = null;
 
-    [NonSerialized] private Quaternion startRot;
-    [NonSerialized] private Quaternion endRot;
+    private Quaternion startRot;
+    private Quaternion endRot;
 
     public override void OnStart()
     {

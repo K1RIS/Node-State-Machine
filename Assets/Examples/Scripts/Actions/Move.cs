@@ -1,7 +1,5 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-[CreateAssetMenu(menuName = "StateMachine/Action/Move")]
 public class Move : StateMachine.Action
 {
     [SerializeField] private TransformRuntimeVariable transform = null;
@@ -10,8 +8,8 @@ public class Move : StateMachine.Action
     [SerializeField] private FloatRuntimeVariable horizontalInput = null;
     [SerializeField] private FloatRuntimeVariable verticalInput = null;
 
-    [NonSerialized] private Vector3 startPos;
-    [NonSerialized] private Vector3 endPos;
+    private Vector3 startPos;
+    private Vector3 endPos;
 
     public override void OnStart()
     {

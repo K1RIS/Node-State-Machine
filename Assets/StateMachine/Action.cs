@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
-    public abstract class Action : ScriptableObject
+    public abstract class Action 
     {
         public virtual void OnStart() { }
         public virtual void OnUpdate() { }

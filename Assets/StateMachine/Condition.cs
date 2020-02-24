@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-
-namespace StateMachine
+﻿namespace StateMachine
 {
-    public abstract class Condition : ScriptableObject
+    public abstract class Condition
     {
         public abstract bool Check();
     }
