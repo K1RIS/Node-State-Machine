@@ -3,15 +3,8 @@ using UnityEngine;
 
 namespace StateMachine
 {
-    [CreateAssetMenu(menuName = "StateMachine/Controller")]
     public sealed class StateMachineController : SerializedScriptableObject
     {
-#if UNITY_EDITOR
-        public int statesCount = 0;
-        public string[] names = new string[0];
-        public Vector2[] positions = new Vector2[0];
-#endif
-
         [SerializeField] private Action[][] actions = new Action[0][];
         [SerializeField] private int[][] transitions = new int[0][];
         [SerializeField] private Condition[][][] conditions = new Condition[0][][];
@@ -19,12 +12,18 @@ namespace StateMachine
         [SerializeField] private int startStateIndex = -1;
 
         [System.NonSerialized] private int currentStateIndex;
-        [System.NonSerialized] private bool changeState = false;
+        [System.NonSerialized] private int actionsCount;
+        [System.NonSerialized] private int transitionsCount;
+
+        [System.NonSerialized] private int conditionsCount;
+        [System.NonSerialized] private bool changeState;
 
         public void OnStart()
         {
             currentStateIndex = startStateIndex;
-
+            actionsCount = actions[currentStateIndex].Length;
+            transitionsCount = conditions[currentStateIndex].Length;
+     
             ExecuteActionsOnStart();
         }
 
@@ -42,29 +41,30 @@ namespace StateMachine
 
         private void ExecuteActionsOnStart()
         {
-            for (int i = 0; i < actions[currentStateIndex].Length; i++)
+            for (int i = 0; i < actionsCount; i++)
                 actions[currentStateIndex][i].OnStart();
         }
 
         private void ExecuteActionsOnUpdate()
         {
-            for (int i = 0; i < actions[currentStateIndex].Length; i++)
+            for (int i = 0; i < actionsCount; i++)
                 actions[currentStateIndex][i].OnUpdate();
         }
 
         private void ExecuteActionsOnEnd()
         {
-            for (int i = 0; i < actions[currentStateIndex].Length; i++)
+            for (int i = 0; i < actionsCount; i++)
                 actions[currentStateIndex][i].OnEnd();
         }
 
         private void CheckConditions()
         {
-            for (int i = 0; i < conditions[currentStateIndex].Length; i++)
+            for (int i = 0; i < transitionsCount; i++)
             {
+                conditionsCount = conditions[currentStateIndex][i].Length;
                 changeState = true;
 
-                for (int j = 0; j < conditions[currentStateIndex][i].Length; j++)
+                for (int j = 0; j < conditionsCount; j++)
                     if (!conditions[currentStateIndex][i][j].Check())
                     {
                         changeState = false;
@@ -81,10 +81,12 @@ namespace StateMachine
 
         private void ChangeState(int newStateIndex)
         {
-            Debug.Log(names[newStateIndex]);
-
             ExecuteActionsOnEnd();
+
             currentStateIndex = newStateIndex;
+            actionsCount = actions[currentStateIndex].Length;
+            transitionsCount = conditions[currentStateIndex].Length;
+
             ExecuteActionsOnStart();
         }
     }

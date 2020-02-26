@@ -1,5 +1,38 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-2796903490854711201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50c8da6306c83e644af0eaa8e8e1b934, type: 3}
+  m_Name: Nodes
+  m_EditorClassIdentifier: 
+  statesCount: 3
+  names:
+  - Idle
+  - Move
+  - Rotate
+  rects:
+  - serializedVersion: 2
+    x: 275
+    y: 326
+    width: 150
+    height: 50
+  - serializedVersion: 2
+    x: 273
+    y: 160
+    width: 150
+    height: 50
+  - serializedVersion: 2
+    x: 303
+    y: 519
+    width: 150
+    height: 50
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -340,13 +373,4 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-  statesCount: 3
-  names:
-  - Idle
-  - Move
-  - Rotate
-  positions:
-  - {x: 107, y: 280}
-  - {x: 373, y: 221}
-  - {x: 390, y: 428}
   startStateIndex: 0

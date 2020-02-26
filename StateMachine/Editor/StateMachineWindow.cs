@@ -1,13 +1,12 @@
 ﻿using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace StateMachine
+namespace StateMachine.Editor
 {
     public class StateMachineWindow : OdinEditorWindow
     {
@@ -37,6 +36,7 @@ namespace StateMachine
             }
 
             private StateMachineController stateMachine;
+            private NodesInfo nodesInfo;
             private int stateIndex;
 
             [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
@@ -45,12 +45,13 @@ namespace StateMachine
             private Transition[] transitions;
 
 
-            public State(StateMachineController stateMachine, int stateIndex)
+            public State(StateMachineController stateMachine, NodesInfo nodesInfo, int stateIndex)
             {
                 this.stateMachine = stateMachine;
+                this.nodesInfo = nodesInfo;
                 this.stateIndex = stateIndex;
 
-                name = stateMachine.names[stateIndex];
+                name = nodesInfo.Names[stateIndex];
 
                 actions = StateMachineReflections.GetActions(stateMachine)[stateIndex];
 
@@ -58,10 +59,10 @@ namespace StateMachine
                 Condition[][] transitionConditions = StateMachineReflections.GetConditions(stateMachine)[stateIndex];
                 transitions = new Transition[transitionsIndexes.Length];
                 for (int i = 0; i < transitionsIndexes.Length; i++)
-                    transitions[i] = new Transition(stateMachine.names[transitionsIndexes[i]], transitionConditions[i]);
+                    transitions[i] = new Transition(nodesInfo.Names[transitionsIndexes[i]], transitionConditions[i]);
             }
 
-            private void SaveName() => stateMachine.names[stateIndex] = name;
+            private void SaveName() => nodesInfo.Names[stateIndex] = name;
             private IEnumerable<Action> GetUniqueActions()
             {
                 return typeof(Action).Assembly.GetTypes()
@@ -91,9 +92,7 @@ namespace StateMachine
         private GUIStyle normalStateStyle;
 
         private StateMachineController stateMachine;
-        private int statesCount;
-        private List<string> names = new List<string>();
-        private List<Vector2> positions = new List<Vector2>();
+        private NodesInfo nodesInfo;
         [SerializeField, HideInInspector] private List<List<int>> transitions = new List<List<int>>();
         private int startStateIndex;
 
@@ -128,9 +127,7 @@ namespace StateMachine
             window.minSize = new Vector2(800, 600);
             window.stateMachine = stateMachine;
 
-            window.statesCount = stateMachine.statesCount;
-            window.names = new List<string>(stateMachine.names);
-            window.positions = new List<Vector2>(stateMachine.positions);
+            window.nodesInfo = (NodesInfo)AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(stateMachine), typeof(NodesInfo));
             window.transitions = new List<List<int>>(StateMachineReflections.GetTransitions(stateMachine).Select(i => i.ToList()));
             window.startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
         }
@@ -189,15 +186,15 @@ namespace StateMachine
 
         private void DrawNodes()
         {
-            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
-                GUI.Box(new Rect(positions[stateIndex], STATE_SIZE), names[stateIndex], stateIndex == startStateIndex ? startStateStyle : normalStateStyle);
+            for (int stateIndex = 0; stateIndex < nodesInfo.StatesCount; stateIndex++)
+                GUI.Box(nodesInfo.Rects[stateIndex], nodesInfo.Names[stateIndex], stateIndex == startStateIndex ? startStateStyle : normalStateStyle);
         }
 
         private void DrawTransitions()
         {
-            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+            for (int stateIndex = 0; stateIndex < nodesInfo.StatesCount; stateIndex++)
                 for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
-                    DrawBezier(GetBezierStartPosition(positions[stateIndex]), GetBezierEndPosition(positions[transitions[stateIndex][transitionIndex]]));
+                    DrawBezier(GetBezierStartPosition(nodesInfo.Rects[stateIndex].position), GetBezierEndPosition(nodesInfo.Rects[transitions[stateIndex][transitionIndex]].position));
         }
 
         private void DrawCreatingTransition(Vector2 mousePosition)
@@ -205,7 +202,7 @@ namespace StateMachine
             if (creatingTransitionFromStateIndex == -1)
                 return;
 
-            DrawBezier(GetBezierStartPosition(positions[creatingTransitionFromStateIndex]), mousePosition);
+            DrawBezier(GetBezierStartPosition(nodesInfo.Rects[creatingTransitionFromStateIndex].position), mousePosition);
             GUI.changed = true;
         }
         #endregion
@@ -246,8 +243,9 @@ namespace StateMachine
                 case EventType.ValidateCommand:
                     if (e.commandName == "UndoRedoPerformed")
                     {
-                        //states = new List<State>(StateMachineReflections.GetStates(stateMachine));
-                        //startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
+                        nodesInfo = (NodesInfo)AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(stateMachine), typeof(NodesInfo));
+                        transitions = new List<List<int>>(StateMachineReflections.GetTransitions(stateMachine).Select(i => i.ToList()));
+                        startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
                         GUI.changed = true;
                     }
                     break;
@@ -287,16 +285,17 @@ namespace StateMachine
         private void SelectState(int indexState)
         {
             if (indexState != -1)
-                InspectObjectInDropDown(new State(stateMachine, indexState));
+                InspectObjectInDropDown(new State(stateMachine, nodesInfo, indexState));
         }
 
         private void CreateState(Vector2 mousePosition)
         {
-            Undo.RegisterCompleteObjectUndo(stateMachine, "State Created");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo }, "State Created");
 
-            statesCount++;
-            names.Add("New State");
-            positions.Add(mousePosition);
+            nodesInfo.StatesCount++;
+            nodesInfo.Names.Add("New State");
+            nodesInfo.Rects.Add(new Rect(mousePosition, STATE_SIZE));
+
             transitions.Add(new List<int>());
 
             List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
@@ -306,19 +305,20 @@ namespace StateMachine
 
             SaveStateMachine(actions.ToArray(), conditions.ToArray());
 
-            if (statesCount == 1)
+            if (nodesInfo.StatesCount == 1)
                 StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = 0);
         }
 
         private void DeleteState(int stateIndex)
         {
-            Undo.RegisterCompleteObjectUndo(stateMachine, "State Deleted");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo }, "State Deleted");
 
             DeleteStateReferencesInTransitions(stateIndex);
 
-            statesCount--;
-            names.RemoveAt(stateIndex);
-            positions.RemoveAt(stateIndex);
+            nodesInfo.StatesCount--;
+            nodesInfo.Names.RemoveAt(stateIndex);
+            nodesInfo.Rects.RemoveAt(stateIndex);
+
             transitions.RemoveAt(stateIndex);
 
             List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
@@ -329,14 +329,14 @@ namespace StateMachine
             SaveStateMachine(actions.ToArray(), conditions.ToArray());
 
             if (startStateIndex == stateIndex)
-                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = statesCount > 0 ? 0 : -1);
+                StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = nodesInfo.StatesCount > 0 ? 0 : -1);
         }
 
         private void DeleteStateReferencesInTransitions(int stateIndexToDelete)
         {
             Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
 
-            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+            for (int stateIndex = 0; stateIndex < nodesInfo.StatesCount; stateIndex++)
                 for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
                     if (transitions[stateIndex][transitionIndex] == stateIndexToDelete)
                     {
@@ -387,17 +387,17 @@ namespace StateMachine
 
         private void ResetPanning()
         {
-            for (int i = 0; i < statesCount; i++)
-                positions[i] -= scrollOffset;
+            for (int i = 0; i < nodesInfo.StatesCount; i++)
+                nodesInfo.Rects[i] = new Rect(nodesInfo.Rects[i].position - scrollOffset, nodesInfo.Rects[i].size);
 
             scrollOffset = Vector2.zero;
         }
 
         private void Drag(Vector2 delta)
         {
-            Undo.RegisterCompleteObjectUndo(stateMachine, "State Moved");
+            Undo.RegisterCompleteObjectUndo(nodesInfo, "State Moved");
 
-            positions[draggingStateIndex] += delta;
+            nodesInfo.Rects[draggingStateIndex] = new Rect(nodesInfo.Rects[draggingStateIndex].position + delta, nodesInfo.Rects[draggingStateIndex].size);
 
             GUI.changed = true;
         }
@@ -406,8 +406,8 @@ namespace StateMachine
         {
             scrollOffset += delta;
 
-            for (int i = 0; i < statesCount; i++)
-                positions[i] += delta;
+            for (int i = 0; i < nodesInfo.StatesCount; i++)
+                nodesInfo.Rects[i] = new Rect(nodesInfo.Rects[i].position + delta, nodesInfo.Rects[i].size);
 
             GUI.changed = true;
         }
@@ -415,9 +415,6 @@ namespace StateMachine
         #region Helpers
         private void SaveStateMachine(Action[][] actions, Condition[][][] conditions)
         {
-            stateMachine.statesCount = statesCount;
-            stateMachine.names = names.ToArray();
-            stateMachine.positions = positions.ToArray();
             StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
             StateMachineReflections.SetActions(stateMachine, actions);
             StateMachineReflections.SetConditions(stateMachine, conditions);
@@ -425,8 +422,8 @@ namespace StateMachine
 
         private int GetStateIndex(Vector2 mousePosition)
         {
-            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
-                if (new Rect(positions[stateIndex], STATE_SIZE).Contains(mousePosition))
+            for (int stateIndex = 0; stateIndex < nodesInfo.StatesCount; stateIndex++)
+                if (nodesInfo.Rects[stateIndex].Contains(mousePosition))
                     return stateIndex;
 
             return -1;
@@ -437,10 +434,10 @@ namespace StateMachine
             float minDist = 5f;
             Vector2Int stateAndTransitionIndex = new Vector2Int(-1, -1);
 
-            for (int stateIndex = 0; stateIndex < statesCount; stateIndex++)
+            for (int stateIndex = 0; stateIndex < nodesInfo.StatesCount; stateIndex++)
                 for (int transitionIndex = 0; transitionIndex < transitions[stateIndex].Count; transitionIndex++)
                 {
-                    float dist = GetDistanceToBezier(mousePosition, positions[stateIndex], positions[transitions[stateIndex][transitionIndex]]);
+                    float dist = GetDistanceToBezier(mousePosition, nodesInfo.Rects[stateIndex].position, nodesInfo.Rects[transitions[stateIndex][transitionIndex]].position);
 
                     if (dist < minDist)
                     {

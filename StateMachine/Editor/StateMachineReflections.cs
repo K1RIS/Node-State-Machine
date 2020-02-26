@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using UnityEditor;
 
-namespace StateMachine
+namespace StateMachine.Editor
 {
     public static class StateMachineReflections
     {
