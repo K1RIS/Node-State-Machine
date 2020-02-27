@@ -19,18 +19,18 @@ MonoBehaviour:
   - Rotate
   rects:
   - serializedVersion: 2
-    x: 275
-    y: 326
+    x: 361
+    y: 348
     width: 150
     height: 50
   - serializedVersion: 2
-    x: 273
-    y: 160
+    x: 359
+    y: 182
     width: 150
     height: 50
   - serializedVersion: 2
-    x: 303
-    y: 519
+    x: 370
+    y: 538
     width: 150
     height: 50
 --- !u!114 &11400000
@@ -50,11 +50,8 @@ MonoBehaviour:
     SerializedBytes: 
     ReferencedUnityObjects:
     - {fileID: 11400000, guid: aba512d4e4ae9a847ae14ff3dda1cea6, type: 2}
-    - {fileID: 11400000, guid: b7ce958cc806c8a4fb517a633bdef456, type: 2}
-    - {fileID: 11400000, guid: de52419a815210e4086e4f08bf7c2d07, type: 2}
     - {fileID: 11400000, guid: 632391abc0ba8a647ac2d8df980efbe9, type: 2}
     - {fileID: 11400000, guid: 629f65c41abd7304faa4309a14c33af3, type: 2}
-    - {fileID: 11400000, guid: d77b16b3e5e67d44ca0e0c068cc4a46a, type: 2}
     - {fileID: 11400000, guid: 2eacd9f74edaa6948a9ba351bd3f811e, type: 2}
     SerializedBytesString: 
     Prefab: {fileID: 0}
@@ -91,18 +88,12 @@ MonoBehaviour:
     - Name: transform
       Entry: 10
       Data: 0
-    - Name: duration
-      Entry: 10
-      Data: 1
-    - Name: time
-      Entry: 10
-      Data: 2
     - Name: horizontalInput
       Entry: 10
-      Data: 3
+      Data: 1
     - Name: verticalInput
       Entry: 10
-      Data: 4
+      Data: 2
     - Name: 
       Entry: 8
       Data: 
@@ -124,15 +115,9 @@ MonoBehaviour:
     - Name: transform
       Entry: 10
       Data: 0
-    - Name: duration
-      Entry: 10
-      Data: 5
-    - Name: time
-      Entry: 10
-      Data: 2
     - Name: rotationInput
       Entry: 10
-      Data: 6
+      Data: 3
     - Name: 
       Entry: 8
       Data: 
@@ -208,72 +193,99 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+    - Name: isDurationsEnd
+      Entry: 7
+      Data: 10|System.Boolean[][], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 11|System.Boolean[], mscorlib
+    - Name: 
+      Entry: 14
+      Data: 2
+    - Name: 
+      Entry: 5
+      Data: false
+    - Name: 
+      Entry: 5
+      Data: false
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 12|System.Boolean[], mscorlib
+    - Name: 
+      Entry: 14
+      Data: 1
+    - Name: 
+      Entry: 5
+      Data: true
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 13|System.Boolean[], mscorlib
+    - Name: 
+      Entry: 14
+      Data: 1
+    - Name: 
+      Entry: 5
+      Data: true
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
     - Name: conditions
       Entry: 7
-      Data: 10|StateMachine.Condition[][][], Assembly-CSharp
+      Data: 14|StateMachine.Condition[][][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 3
     - Name: 
       Entry: 7
-      Data: 11|StateMachine.Condition[][], Assembly-CSharp
+      Data: 15|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 2
     - Name: 
       Entry: 7
-      Data: 12|StateMachine.Condition[], Assembly-CSharp
+      Data: 16|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 13|IsAxisInputDetected, Assembly-CSharp
+      Data: 17|IsAxisInputDetected, Assembly-CSharp
     - Name: axis
       Entry: 7
-      Data: 14|FloatRuntimeVariable[], Assembly-CSharp
+      Data: 18|FloatRuntimeVariable[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 2
     - Name: 
       Entry: 10
-      Data: 3
-    - Name: 
-      Entry: 10
-      Data: 4
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 15|StateMachine.Condition[], Assembly-CSharp
-    - Name: 
-      Entry: 12
-      Data: 1
-    - Name: 
-      Entry: 7
-      Data: 16|IsAxisInputDetected, Assembly-CSharp
-    - Name: axis
-      Entry: 7
-      Data: 17|FloatRuntimeVariable[], Assembly-CSharp
-    - Name: 
-      Entry: 12
       Data: 1
     - Name: 
       Entry: 10
-      Data: 6
+      Data: 2
     - Name: 
       Entry: 13
       Data: 
@@ -289,18 +301,6 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 18|StateMachine.Condition[][], Assembly-CSharp
-    - Name: 
-      Entry: 12
-      Data: 1
     - Name: 
       Entry: 7
       Data: 19|StateMachine.Condition[], Assembly-CSharp
@@ -309,13 +309,22 @@ MonoBehaviour:
       Data: 1
     - Name: 
       Entry: 7
-      Data: 20|IsAnimationEnd, Assembly-CSharp
-    - Name: duration
-      Entry: 10
+      Data: 20|IsAxisInputDetected, Assembly-CSharp
+    - Name: axis
+      Entry: 7
+      Data: 21|FloatRuntimeVariable[], Assembly-CSharp
+    - Name: 
+      Entry: 12
       Data: 1
-    - Name: time
+    - Name: 
       Entry: 10
-      Data: 2
+      Data: 3
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
     - Name: 
       Entry: 8
       Data: 
@@ -333,28 +342,40 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: 21|StateMachine.Condition[][], Assembly-CSharp
+      Data: 22|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 22|StateMachine.Condition[], Assembly-CSharp
+      Data: 23|StateMachine.Condition[], Assembly-CSharp
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 24|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 23|IsAnimationEnd, Assembly-CSharp
-    - Name: duration
-      Entry: 10
-      Data: 5
-    - Name: time
-      Entry: 10
-      Data: 2
+      Data: 25|StateMachine.Condition[], Assembly-CSharp
     - Name: 
-      Entry: 8
-      Data: 
+      Entry: 12
+      Data: 0
     - Name: 
       Entry: 13
       Data: 
@@ -373,4 +394,8 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  durations:
+  - Infinity
+  - 0.5
+  - 1
   startStateIndex: 0

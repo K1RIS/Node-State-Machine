@@ -18,7 +18,7 @@ namespace StateMachine
 
         private void Update()
         {
-            controller.OnUpdate();
+            controller.OnUpdate(Time.deltaTime);
         }
 
         private void OnDestroy()

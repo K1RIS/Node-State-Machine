@@ -3,8 +3,6 @@
 public class Move : StateMachine.Action
 {
     [SerializeField] private TransformRuntimeVariable transform = null;
-    [SerializeField] private FloatStandardVariable duration = null;
-    [SerializeField] private FloatRuntimeVariable time = null;
     [SerializeField] private FloatRuntimeVariable horizontalInput = null;
     [SerializeField] private FloatRuntimeVariable verticalInput = null;
 
@@ -16,8 +14,6 @@ public class Move : StateMachine.Action
         startPos = transform.Value.position;
 
         endPos = transform.Value.position + (transform.Value.rotation * new Vector3Int(RoundAwayFromZero(horizontalInput.Value), 0, RoundAwayFromZero(verticalInput.Value)));
-
-        time.Value = 0f;
     }
 
     private int RoundAwayFromZero(float f)
@@ -30,10 +26,9 @@ public class Move : StateMachine.Action
             return 0;
     }
 
-    public override void OnUpdate()
+    public override void OnUpdate(float statePercent)
     {
-        time.Value += Time.deltaTime;
-        transform.Value.position = Vector3.Lerp(startPos, endPos, time.Value / duration.Value);
+        transform.Value.position = Vector3.Lerp(startPos, endPos, statePercent);
     }
 
     public override void OnEnd()

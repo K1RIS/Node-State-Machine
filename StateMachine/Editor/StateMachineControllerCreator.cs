@@ -5,7 +5,7 @@ namespace StateMachine.Editor
 {
     public static class StateMachineControllerCreator
     {
-        [MenuItem("Assets/Create/State Machine Controller")]
+        [MenuItem("Assets/Create/State Machine Controller", priority = 1)]
         public static void Create()
         {
             ScriptableObject controller = ScriptableObject.CreateInstance(typeof(StateMachineController));

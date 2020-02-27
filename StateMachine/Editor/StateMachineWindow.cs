@@ -16,11 +16,13 @@ namespace StateMachine.Editor
             private class Transition
             {
                 private string transitionTo;
+                [ShowInInspector] private bool isDurationEnd;               
                 [ShowInInspector, ValueDropdown(nameof(GetUniqueConditions))] private Condition[] conditions;
 
-                public Transition(string transitionTo, Condition[] conditions)
+                public Transition(string transitionTo, bool isDurationEnd, Condition[] conditions)
                 {
                     this.transitionTo = transitionTo;
+                    this.isDurationEnd = isDurationEnd;
                     this.conditions = conditions;
                 }
 
@@ -32,6 +34,7 @@ namespace StateMachine.Editor
                         .Select(x => (Condition)Activator.CreateInstance(x));
                 }
 
+                public bool GetIsDurationEnd() => isDurationEnd;
                 public Condition[] GetConditions() => conditions;
             }
 
@@ -40,8 +43,9 @@ namespace StateMachine.Editor
             private int stateIndex;
 
             [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
+            [ShowInInspector, OnValueChanged(nameof(SaveDuration))] private float duration;
             [ShowInInspector, OnValueChanged(nameof(SaveActions)), ValueDropdown(nameof(GetUniqueActions))] private Action[] actions;
-            [ShowInInspector, OnValueChanged(nameof(SaveConditions)), ListDrawerSettings(DraggableItems = false, HideAddButton = true, HideRemoveButton = true, ListElementLabelName = "transitionTo")]
+            [ShowInInspector, ListDrawerSettings(DraggableItems = false, HideAddButton = true, HideRemoveButton = true, ListElementLabelName = "transitionTo")]
             private Transition[] transitions;
 
 
@@ -52,17 +56,26 @@ namespace StateMachine.Editor
                 this.stateIndex = stateIndex;
 
                 name = nodesInfo.Names[stateIndex];
+                
+                duration = StateMachineReflections.GetDurations(stateMachine)[stateIndex];
 
                 actions = StateMachineReflections.GetActions(stateMachine)[stateIndex];
 
                 int[] transitionsIndexes = StateMachineReflections.GetTransitions(stateMachine)[stateIndex];
+                bool[] isDurationEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine)[stateIndex];
                 Condition[][] transitionConditions = StateMachineReflections.GetConditions(stateMachine)[stateIndex];
                 transitions = new Transition[transitionsIndexes.Length];
                 for (int i = 0; i < transitionsIndexes.Length; i++)
-                    transitions[i] = new Transition(nodesInfo.Names[transitionsIndexes[i]], transitionConditions[i]);
+                    transitions[i] = new Transition(nodesInfo.Names[transitionsIndexes[i]], isDurationEnd[i], transitionConditions[i]);
             }
 
             private void SaveName() => nodesInfo.Names[stateIndex] = name;
+            private void SaveDuration()
+            {
+                List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
+                durations[stateIndex] = duration;
+                StateMachineReflections.SetDurations(stateMachine, durations.ToArray());
+            }
             private IEnumerable<Action> GetUniqueActions()
             {
                 return typeof(Action).Assembly.GetTypes()
@@ -78,8 +91,12 @@ namespace StateMachine.Editor
             }
 
             [Button]
-            private void SaveConditions()
+            private void SaveTransitions()
             {
+                bool[][] isDurationsEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine);
+                isDurationsEnd[stateIndex] = transitions.Select(i => i.GetIsDurationEnd()).ToArray();
+                StateMachineReflections.SetIsDurationsEnd(stateMachine, isDurationsEnd);
+
                 Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
                 conditions[stateIndex] = transitions.Select(i => i.GetConditions()).ToArray();
                 StateMachineReflections.SetConditions(stateMachine, conditions);
@@ -153,6 +170,10 @@ namespace StateMachine.Editor
 
             DrawGrid(20, 0.2f, Color.gray);
             DrawGrid(100, 0.4f, Color.gray);
+
+            if (nodesInfo == null)
+                return;
+
             DrawNodes();
             DrawTransitions();
             DrawCreatingTransition(Event.current.mousePosition);
@@ -239,16 +260,6 @@ namespace StateMachine.Editor
                     if (e.button == 0)
                         draggingStateIndex = -1;
                     break;
-
-                case EventType.ValidateCommand:
-                    if (e.commandName == "UndoRedoPerformed")
-                    {
-                        nodesInfo = (NodesInfo)AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(stateMachine), typeof(NodesInfo));
-                        transitions = new List<List<int>>(StateMachineReflections.GetTransitions(stateMachine).Select(i => i.ToList()));
-                        startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
-                        GUI.changed = true;
-                    }
-                    break;
             }
         }
 
@@ -290,7 +301,7 @@ namespace StateMachine.Editor
 
         private void CreateState(Vector2 mousePosition)
         {
-            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo }, "State Created");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo, this }, "State Created");
 
             nodesInfo.StatesCount++;
             nodesInfo.Names.Add("New State");
@@ -300,10 +311,14 @@ namespace StateMachine.Editor
 
             List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
             actions.Add(new Action[0]);
+            List<bool[]> isDurationEnd = new List<bool[]>(StateMachineReflections.GetIsDurationsEnd(stateMachine));
+            isDurationEnd.Add(new bool[0]);
+            List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
+            durations.Add(Mathf.Infinity);
             List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
             conditions.Add(new Condition[0][]);
 
-            SaveStateMachine(actions.ToArray(), conditions.ToArray());
+            SaveStateMachine(actions.ToArray(), isDurationEnd.ToArray(), durations.ToArray(), conditions.ToArray());
 
             if (nodesInfo.StatesCount == 1)
                 StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = 0);
@@ -311,7 +326,7 @@ namespace StateMachine.Editor
 
         private void DeleteState(int stateIndex)
         {
-            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo }, "State Deleted");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, nodesInfo, this }, "State Deleted");
 
             DeleteStateReferencesInTransitions(stateIndex);
 
@@ -323,10 +338,14 @@ namespace StateMachine.Editor
 
             List<Action[]> actions = new List<Action[]>(StateMachineReflections.GetActions(stateMachine));
             actions.RemoveAt(stateIndex);
+            List<bool[]> isDurationEnd = new List<bool[]>(StateMachineReflections.GetIsDurationsEnd(stateMachine));
+            isDurationEnd.RemoveAt(0);
+            List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
+            durations.RemoveAt(0);
             List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
             conditions.RemoveAt(stateIndex);
 
-            SaveStateMachine(actions.ToArray(), conditions.ToArray());
+            SaveStateMachine(actions.ToArray(), isDurationEnd.ToArray(), durations.ToArray(), conditions.ToArray());
 
             if (startStateIndex == stateIndex)
                 StateMachineReflections.SetStartStateIndex(stateMachine, startStateIndex = nodesInfo.StatesCount > 0 ? 0 : -1);
@@ -356,12 +375,18 @@ namespace StateMachine.Editor
         {
             int stateIndex = GetStateIndex(mousePosition);
 
-            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex && !transitions[creatingTransitionFromStateIndex].Any(t => t == stateIndex))
+            if (stateIndex != -1 && stateIndex != creatingTransitionFromStateIndex)
             {
-                Undo.RegisterCompleteObjectUndo(stateMachine, "Transition Created");
+                Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, this }, "Transition Created");
 
                 transitions[creatingTransitionFromStateIndex].Add(stateIndex);
                 StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
+
+                bool[][] isDurationsEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine);
+                List<bool> isDurationEnd = new List<bool>(isDurationsEnd[creatingTransitionFromStateIndex]);
+                isDurationEnd.Add(false);
+                isDurationsEnd[creatingTransitionFromStateIndex] = isDurationEnd.ToArray();
+                StateMachineReflections.SetIsDurationsEnd(stateMachine, isDurationsEnd);
 
                 Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
                 List<Condition[]> stateConditions = new List<Condition[]>(conditions[creatingTransitionFromStateIndex]);
@@ -373,10 +398,16 @@ namespace StateMachine.Editor
 
         private void DeleteTransition(int stateIndex, int transitionIndex)
         {
-            Undo.RegisterCompleteObjectUndo(stateMachine, "Transition Deleted");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { stateMachine, this }, "Transition Deleted");
 
             transitions[stateIndex].RemoveAt(transitionIndex);
             StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
+
+            bool[][] isDurationsEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine);
+            List<bool> isDurationEnd = new List<bool>(isDurationsEnd[transitionIndex]);
+            isDurationEnd.RemoveAt(transitionIndex);
+            isDurationsEnd[transitionIndex] = isDurationEnd.ToArray();
+            StateMachineReflections.SetIsDurationsEnd(stateMachine, isDurationsEnd);
 
             Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
             List<Condition[]> stateConditions = new List<Condition[]>(conditions[stateIndex]);
@@ -395,7 +426,7 @@ namespace StateMachine.Editor
 
         private void Drag(Vector2 delta)
         {
-            Undo.RegisterCompleteObjectUndo(nodesInfo, "State Moved");
+            Undo.RegisterCompleteObjectUndo(new UnityEngine.Object[] { nodesInfo, this }, "State Moved");
 
             nodesInfo.Rects[draggingStateIndex] = new Rect(nodesInfo.Rects[draggingStateIndex].position + delta, nodesInfo.Rects[draggingStateIndex].size);
 
@@ -413,10 +444,12 @@ namespace StateMachine.Editor
         }
 
         #region Helpers
-        private void SaveStateMachine(Action[][] actions, Condition[][][] conditions)
+        private void SaveStateMachine(Action[][] actions, bool[][] isDurationEnd, float[] durations, Condition[][][] conditions)
         {
             StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
             StateMachineReflections.SetActions(stateMachine, actions);
+            StateMachineReflections.SetIsDurationsEnd(stateMachine, isDurationEnd);
+            StateMachineReflections.SetDurations(stateMachine, durations);
             StateMachineReflections.SetConditions(stateMachine, conditions);
         }
 

@@ -25,6 +25,28 @@ namespace StateMachine.Editor
             EditorUtility.SetDirty(stateMachine);
         }
 
+        public static bool[][] GetIsDurationsEnd(StateMachineController stateMachine)
+        {
+            return (bool[][])typeof(StateMachineController).GetField("isDurationsEnd", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+        }
+
+        public static void SetIsDurationsEnd(StateMachineController stateMachine, bool[][] isDurationEnd)
+        {
+            typeof(StateMachineController).GetField("isDurationsEnd", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, isDurationEnd);
+            EditorUtility.SetDirty(stateMachine);
+        }
+
+        public static float[] GetDurations(StateMachineController stateMachine)
+        {
+            return (float[])typeof(StateMachineController).GetField("durations", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+        }
+
+        public static void SetDurations(StateMachineController stateMachine, float[] durations)
+        {
+            typeof(StateMachineController).GetField("durations", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, durations);
+            EditorUtility.SetDirty(stateMachine);
+        }
+
         public static Action[][] GetActions(StateMachineController stateMachine)
         {
             return (Action[][])typeof(StateMachineController).GetField("actions", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
