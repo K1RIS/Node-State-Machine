@@ -1,0 +1,19 @@
+using UnityEngine;
+
+public class #SCRIPTNAME# : StateMachine.Action
+{
+    public override void OnStart()
+    {
+
+    }
+
+    public override void OnUpdate(float statePercent)
+    {
+
+    }
+
+    public override void OnEnd()
+    {
+
+    }
+}
