@@ -13,11 +13,11 @@ namespace StateMachine.Editor
         private class State
         {
             [Serializable]
-            private class Transition
+            private struct Transition
             {
                 private string transitionTo;
-                [ShowInInspector] private bool isDurationEnd;               
-                [ShowInInspector, ValueDropdown(nameof(GetUniqueConditions))] private Condition[] conditions;
+                [ShowInInspector] private bool isDurationEnd;
+                [ShowInInspector, TypeFilter(nameof(GetAllConditions))] private Condition[] conditions;
 
                 public Transition(string transitionTo, bool isDurationEnd, Condition[] conditions)
                 {
@@ -26,12 +26,10 @@ namespace StateMachine.Editor
                     this.conditions = conditions;
                 }
 
-                private IEnumerable<Condition> GetUniqueConditions()
+                private IEnumerable<Type> GetAllConditions()
                 {
                     return typeof(Condition).Assembly.GetTypes()
-                        .Where(t => t.IsSubclassOf(typeof(Condition)))
-                        .Where(t => !conditions.Any(i => i.GetType() == t))
-                        .Select(x => (Condition)Activator.CreateInstance(x));
+                        .Where(t => t.IsSubclassOf(typeof(Condition)));
                 }
 
                 public bool GetIsDurationEnd() => isDurationEnd;
@@ -42,10 +40,14 @@ namespace StateMachine.Editor
             private NodesInfo nodesInfo;
             private int stateIndex;
 
+            private int[][] transitionsIndexes;
+            private bool[][] isDurationsEnd;
+            private Condition[][][] conditions;
+
             [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
             [ShowInInspector, OnValueChanged(nameof(SaveDuration))] private float duration;
-            [ShowInInspector, OnValueChanged(nameof(SaveActions)), ValueDropdown(nameof(GetUniqueActions))] private Action[] actions;
-            [ShowInInspector, ListDrawerSettings(DraggableItems = false, HideAddButton = true, HideRemoveButton = true, ListElementLabelName = "transitionTo")]
+            [ShowInInspector, OnValueChanged(nameof(SaveActions)), TypeFilter(nameof(GetUniqueActions))] private Action[] actions;
+            [ShowInInspector, ListDrawerSettings(DraggableItems = false, HideAddButton = true, CustomRemoveIndexFunction = nameof(DeleteTransition), ListElementLabelName = "transitionTo"), OnValueChanged(nameof(SaveTransitions), true)]
             private Transition[] transitions;
 
 
@@ -55,18 +57,17 @@ namespace StateMachine.Editor
                 this.nodesInfo = nodesInfo;
                 this.stateIndex = stateIndex;
 
+                transitionsIndexes = StateMachineReflections.GetTransitions(stateMachine);
+                isDurationsEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine);
+                conditions = StateMachineReflections.GetConditions(stateMachine);
+
                 name = nodesInfo.Names[stateIndex];
-                
                 duration = StateMachineReflections.GetDurations(stateMachine)[stateIndex];
-
                 actions = StateMachineReflections.GetActions(stateMachine)[stateIndex];
-
-                int[] transitionsIndexes = StateMachineReflections.GetTransitions(stateMachine)[stateIndex];
-                bool[] isDurationEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine)[stateIndex];
-                Condition[][] transitionConditions = StateMachineReflections.GetConditions(stateMachine)[stateIndex];
-                transitions = new Transition[transitionsIndexes.Length];
-                for (int i = 0; i < transitionsIndexes.Length; i++)
-                    transitions[i] = new Transition(nodesInfo.Names[transitionsIndexes[i]], isDurationEnd[i], transitionConditions[i]);
+                
+                transitions = new Transition[transitionsIndexes[stateIndex].Length];
+                for (int i = 0; i < transitions.Length; i++)
+                    transitions[i] = new Transition("=> " + nodesInfo.Names[transitionsIndexes[stateIndex][i]], isDurationsEnd[stateIndex][i], conditions[stateIndex][i]);
             }
 
             private void SaveName() => nodesInfo.Names[stateIndex] = name;
@@ -76,12 +77,11 @@ namespace StateMachine.Editor
                 durations[stateIndex] = duration;
                 StateMachineReflections.SetDurations(stateMachine, durations.ToArray());
             }
-            private IEnumerable<Action> GetUniqueActions()
+            private IEnumerable<Type> GetUniqueActions()
             {
                 return typeof(Action).Assembly.GetTypes()
                     .Where(t => t.IsSubclassOf(typeof(Action)))
-                    .Where(t => !actions.Any(i => i.GetType() == t))
-                    .Select(x => (Action)Activator.CreateInstance(x));
+                    .Where(t => !actions.Any(i => i.GetType() == t));
             }
             private void SaveActions()
             {
@@ -89,16 +89,24 @@ namespace StateMachine.Editor
                 actions[stateIndex] = this.actions;
                 StateMachineReflections.SetActions(stateMachine, actions);
             }
+            private void DeleteTransition(int index)
+            {
+                List<int> transition = new List<int>(transitionsIndexes[stateIndex]);
+                transition.RemoveAt(index);
+                transitionsIndexes[stateIndex] = transition.ToArray();
 
-            [Button]
+                List<bool> isDurationEnd = new List<bool>(isDurationsEnd[stateIndex]);
+                isDurationEnd.RemoveAt(index);
+                isDurationsEnd[stateIndex] = isDurationEnd.ToArray();
+       
+                List<Condition[]> stateConditions = new List<Condition[]>(conditions[stateIndex]);
+                stateConditions.RemoveAt(index);
+                conditions[stateIndex] = stateConditions.ToArray();
+            }
             private void SaveTransitions()
             {
-                bool[][] isDurationsEnd = StateMachineReflections.GetIsDurationsEnd(stateMachine);
-                isDurationsEnd[stateIndex] = transitions.Select(i => i.GetIsDurationEnd()).ToArray();
+                StateMachineReflections.SetTransitions(stateMachine, transitionsIndexes);
                 StateMachineReflections.SetIsDurationsEnd(stateMachine, isDurationsEnd);
-
-                Condition[][][] conditions = StateMachineReflections.GetConditions(stateMachine);
-                conditions[stateIndex] = transitions.Select(i => i.GetConditions()).ToArray();
                 StateMachineReflections.SetConditions(stateMachine, conditions);
             }
         }
