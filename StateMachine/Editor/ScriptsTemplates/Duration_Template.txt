@@ -1,0 +1,9 @@
+using UnityEngine;
+
+public class #SCRIPTNAME# : StateMachine.Duration
+{
+    public override float Get()
+    {
+        return 0f;
+    }
+}

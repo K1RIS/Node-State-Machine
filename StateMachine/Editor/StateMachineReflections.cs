@@ -36,12 +36,12 @@ namespace StateMachine.Editor
             EditorUtility.SetDirty(stateMachine);
         }
 
-        public static float[] GetDurations(StateMachineController stateMachine)
+        public static Duration[] GetDurations(StateMachineController stateMachine)
         {
-            return (float[])typeof(StateMachineController).GetField("durations", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
+            return (Duration[])typeof(StateMachineController).GetField("durations", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(stateMachine);
         }
 
-        public static void SetDurations(StateMachineController stateMachine, float[] durations)
+        public static void SetDurations(StateMachineController stateMachine, Duration[] durations)
         {
             typeof(StateMachineController).GetField("durations", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(stateMachine, durations);
             EditorUtility.SetDirty(stateMachine);

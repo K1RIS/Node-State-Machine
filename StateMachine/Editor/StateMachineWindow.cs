@@ -45,7 +45,7 @@ namespace StateMachine.Editor
             private Condition[][][] conditions;
 
             [ShowInInspector, OnValueChanged(nameof(SaveName))] private string name;
-            [ShowInInspector, OnValueChanged(nameof(SaveDuration))] private float duration;
+            [ShowInInspector, OnValueChanged(nameof(SaveDuration)), TypeFilter(nameof(GetDurations))] private Duration duration;
             [ShowInInspector, OnValueChanged(nameof(SaveActions)), TypeFilter(nameof(GetUniqueActions))] private Action[] actions;
             [ShowInInspector, ListDrawerSettings(DraggableItems = false, HideAddButton = true, CustomRemoveIndexFunction = nameof(DeleteTransition), ListElementLabelName = "transitionTo"), OnValueChanged(nameof(SaveTransitions), true)]
             private Transition[] transitions;
@@ -71,9 +71,15 @@ namespace StateMachine.Editor
             }
 
             private void SaveName() => nodesInfo.Names[stateIndex] = name;
+            private IEnumerable<Type> GetDurations()
+            {
+                return typeof(Duration).Assembly.GetTypes()
+                 .Where(t => t.IsSubclassOf(typeof(Duration)))
+                 .Where(t => !actions.Any(i => i.GetType() == t));
+            }
             private void SaveDuration()
             {
-                List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
+                List<Duration> durations = new List<Duration>(StateMachineReflections.GetDurations(stateMachine));
                 durations[stateIndex] = duration;
                 StateMachineReflections.SetDurations(stateMachine, durations.ToArray());
             }
@@ -321,8 +327,8 @@ namespace StateMachine.Editor
             actions.Add(new Action[0]);
             List<bool[]> isDurationEnd = new List<bool[]>(StateMachineReflections.GetIsDurationsEnd(stateMachine));
             isDurationEnd.Add(new bool[0]);
-            List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
-            durations.Add(Mathf.Infinity);
+            List<Duration> durations = new List<Duration>(StateMachineReflections.GetDurations(stateMachine));
+            durations.Add(new ConstantDuration());
             List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
             conditions.Add(new Condition[0][]);
 
@@ -348,7 +354,7 @@ namespace StateMachine.Editor
             actions.RemoveAt(stateIndex);
             List<bool[]> isDurationEnd = new List<bool[]>(StateMachineReflections.GetIsDurationsEnd(stateMachine));
             isDurationEnd.RemoveAt(0);
-            List<float> durations = new List<float>(StateMachineReflections.GetDurations(stateMachine));
+            List<Duration> durations = new List<Duration>(StateMachineReflections.GetDurations(stateMachine));
             durations.RemoveAt(0);
             List<Condition[][]> conditions = new List<Condition[][]>(StateMachineReflections.GetConditions(stateMachine));
             conditions.RemoveAt(stateIndex);
@@ -452,7 +458,7 @@ namespace StateMachine.Editor
         }
 
         #region Helpers
-        private void SaveStateMachine(Action[][] actions, bool[][] isDurationEnd, float[] durations, Condition[][][] conditions)
+        private void SaveStateMachine(Action[][] actions, bool[][] isDurationEnd, Duration[] durations, Condition[][][] conditions)
         {
             StateMachineReflections.SetTransitions(stateMachine, transitions.Select(a => a.ToArray()).ToArray());
             StateMachineReflections.SetActions(stateMachine, actions);

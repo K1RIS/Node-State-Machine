@@ -29,6 +29,12 @@ namespace StateMachine.Editor
             TryCreateScriptFromTemplate("Condition_Template", "NewCondition");
         }
 
+        [MenuItem("Assets/Create/State Machine/Duration", priority = 1)]
+        private static void NewDuration()
+        {
+            TryCreateScriptFromTemplate("Duration_Template", "NewDuration");
+        }
+
         private static void TryCreateScriptFromTemplate(string templateName, string defaultScriptName)
         {
             string[] guids = AssetDatabase.FindAssets(templateName);

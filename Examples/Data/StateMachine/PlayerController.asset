@@ -193,15 +193,54 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-    - Name: isDurationsEnd
+    - Name: durations
       Entry: 7
-      Data: 10|System.Boolean[][], mscorlib
+      Data: 10|StateMachine.Duration[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 3
     - Name: 
       Entry: 7
-      Data: 11|System.Boolean[], mscorlib
+      Data: 11|StateMachine.ConstantDuration, Assembly-CSharp
+    - Name: duration
+      Entry: 4
+      Data: Infinity
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 12|StateMachine.ConstantDuration, Assembly-CSharp
+    - Name: duration
+      Entry: 4
+      Data: 1
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 13|StateMachine.ConstantDuration, Assembly-CSharp
+    - Name: duration
+      Entry: 4
+      Data: 0.5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: isDurationsEnd
+      Entry: 7
+      Data: 14|System.Boolean[][], mscorlib
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 15|System.Boolean[], mscorlib
     - Name: 
       Entry: 14
       Data: 2
@@ -219,7 +258,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: 12|System.Boolean[], mscorlib
+      Data: 16|System.Boolean[], mscorlib
     - Name: 
       Entry: 14
       Data: 1
@@ -234,7 +273,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: 13|System.Boolean[], mscorlib
+      Data: 17|System.Boolean[], mscorlib
     - Name: 
       Entry: 14
       Data: 1
@@ -255,28 +294,28 @@ MonoBehaviour:
       Data: 
     - Name: conditions
       Entry: 7
-      Data: 14|StateMachine.Condition[][][], Assembly-CSharp
+      Data: 18|StateMachine.Condition[][][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 3
     - Name: 
       Entry: 7
-      Data: 15|StateMachine.Condition[][], Assembly-CSharp
+      Data: 19|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 2
     - Name: 
       Entry: 7
-      Data: 16|StateMachine.Condition[], Assembly-CSharp
+      Data: 20|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 17|IsAxisInputDetected, Assembly-CSharp
+      Data: 21|IsAxisInputDetected, Assembly-CSharp
     - Name: axis
       Entry: 7
-      Data: 18|FloatRuntimeVariable[], Assembly-CSharp
+      Data: 22|FloatRuntimeVariable[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 2
@@ -301,57 +340,33 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-    - Name: 
-      Entry: 7
-      Data: 19|StateMachine.Condition[], Assembly-CSharp
-    - Name: 
-      Entry: 12
-      Data: 1
-    - Name: 
-      Entry: 7
-      Data: 20|IsAxisInputDetected, Assembly-CSharp
-    - Name: axis
-      Entry: 7
-      Data: 21|FloatRuntimeVariable[], Assembly-CSharp
-    - Name: 
-      Entry: 12
-      Data: 1
-    - Name: 
-      Entry: 10
-      Data: 3
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 22|StateMachine.Condition[][], Assembly-CSharp
-    - Name: 
-      Entry: 12
-      Data: 1
     - Name: 
       Entry: 7
       Data: 23|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
-      Data: 0
+      Data: 1
+    - Name: 
+      Entry: 7
+      Data: 24|IsAxisInputDetected, Assembly-CSharp
+    - Name: axis
+      Entry: 7
+      Data: 25|FloatRuntimeVariable[], Assembly-CSharp
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
+      Entry: 10
+      Data: 3
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
     - Name: 
       Entry: 13
       Data: 
@@ -366,13 +381,37 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 7
-      Data: 24|StateMachine.Condition[][], Assembly-CSharp
+      Data: 26|StateMachine.Condition[][], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 1
     - Name: 
       Entry: 7
-      Data: 25|StateMachine.Condition[], Assembly-CSharp
+      Data: 27|StateMachine.Condition[], Assembly-CSharp
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 28|StateMachine.Condition[][], Assembly-CSharp
+    - Name: 
+      Entry: 12
+      Data: 1
+    - Name: 
+      Entry: 7
+      Data: 29|StateMachine.Condition[], Assembly-CSharp
     - Name: 
       Entry: 12
       Data: 0
@@ -394,8 +433,4 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-  durations:
-  - Infinity
-  - 0.5
-  - 1
   startStateIndex: 0

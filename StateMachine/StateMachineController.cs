@@ -7,7 +7,7 @@ namespace StateMachine
     {
         [SerializeField] private Action[][] actions = new Action[0][];
         [SerializeField] private int[][] transitions = new int[0][];
-        [SerializeField] private float[] durations = new float[0];
+        [SerializeField] private Duration[] durations = new Duration[0];
         [SerializeField] private bool[][] isDurationsEnd = new bool[0][];
         [SerializeField] private Condition[][][] conditions = new Condition[0][][];
 
@@ -16,6 +16,7 @@ namespace StateMachine
         [System.NonSerialized] private int currentStateIndex;
         [System.NonSerialized] private int actionsCount;
         [System.NonSerialized] private int transitionsCount;
+        [System.NonSerialized] private float duration;
 
         [System.NonSerialized] private int conditionsCount;
         [System.NonSerialized] private bool changeState;
@@ -25,17 +26,23 @@ namespace StateMachine
 
         public void OnStart()
         {
-            currentStateIndex = startStateIndex;
-            actionsCount = actions[currentStateIndex].Length;
-            transitionsCount = conditions[currentStateIndex].Length;
+            InitState(startStateIndex);
 
             ExecuteActionsOnStart();
+        }
+
+        private void InitState(int stateIndex)
+        {
+            currentStateIndex = stateIndex;
+            actionsCount = actions[stateIndex].Length;
+            transitionsCount = conditions[stateIndex].Length;
+            duration = durations[stateIndex].Get();
         }
 
         public void OnUpdate(float delta)
         {
             time += delta;
-            statePercent = time / durations[currentStateIndex];
+            statePercent = time / duration;
 
             ExecuteActionsOnUpdate();
 
@@ -69,7 +76,7 @@ namespace StateMachine
         {
             for (int transitionIndex = 0; transitionIndex < transitionsCount; transitionIndex++)
             {
-                if (!isDurationsEnd[currentStateIndex][transitionIndex] || (isDurationsEnd[currentStateIndex][transitionIndex] && time > durations[currentStateIndex]))
+                if (!isDurationsEnd[currentStateIndex][transitionIndex] || (isDurationsEnd[currentStateIndex][transitionIndex] && time > duration))
                 {
                     conditionsCount = conditions[currentStateIndex][transitionIndex].Length;
                     changeState = true;
@@ -90,14 +97,12 @@ namespace StateMachine
             }
         }
 
-        private void ChangeState(int newStateIndex)
+        private void ChangeState(int stateIndex)
         {
             ExecuteActionsOnEnd();
 
-            currentStateIndex = newStateIndex;
-            actionsCount = actions[newStateIndex].Length;
-            transitionsCount = conditions[newStateIndex].Length;
-            
+            InitState(stateIndex);
+
             time = 0f;
             statePercent = 0f;
 

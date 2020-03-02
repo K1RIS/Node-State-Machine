@@ -4,6 +4,6 @@ public class #SCRIPTNAME# : StateMachine.Condition
 {
     public override bool Check()
     {
-
+        return false;
     }
 }
