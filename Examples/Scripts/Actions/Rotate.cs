@@ -15,9 +15,9 @@ public class Rotate : StateMachine.Action
         endRot = transform.Value.rotation * Quaternion.Euler(0f, Mathf.Sign(rotationInput.Value) * 90f, 0f);
     }
 
-    public override void OnUpdate(float statePercent)
+    public override void OnUpdate(float stateTime, float stateDuration)
     {
-        transform.Value.rotation = Quaternion.Slerp(startRot, endRot, statePercent);
+        transform.Value.rotation = Quaternion.Slerp(startRot, endRot, stateTime / stateDuration);
     }
 
     public override void OnEnd()

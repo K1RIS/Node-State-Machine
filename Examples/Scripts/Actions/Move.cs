@@ -26,9 +26,9 @@ public class Move : StateMachine.Action
             return 0;
     }
 
-    public override void OnUpdate(float statePercent)
+    public override void OnUpdate(float stateTime, float stateDuration)
     {
-        transform.Value.position = Vector3.Lerp(startPos, endPos, statePercent);
+        transform.Value.position = Vector3.Lerp(startPos, endPos, stateTime / stateDuration);
     }
 
     public override void OnEnd()

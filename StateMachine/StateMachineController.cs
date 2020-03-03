@@ -22,7 +22,6 @@ namespace StateMachine
         [System.NonSerialized] private bool changeState;
 
         [System.NonSerialized] private float time;
-        [System.NonSerialized] private float statePercent;
 
         public void OnStart()
         {
@@ -42,7 +41,6 @@ namespace StateMachine
         public void OnUpdate(float delta)
         {
             time += delta;
-            statePercent = time / duration;
 
             ExecuteActionsOnUpdate();
 
@@ -63,7 +61,7 @@ namespace StateMachine
         private void ExecuteActionsOnUpdate()
         {
             for (int i = 0; i < actionsCount; i++)
-                actions[currentStateIndex][i].OnUpdate(statePercent);
+                actions[currentStateIndex][i].OnUpdate(time, duration);
         }
 
         private void ExecuteActionsOnEnd()
@@ -104,7 +102,6 @@ namespace StateMachine
             InitState(stateIndex);
 
             time = 0f;
-            statePercent = 0f;
 
             ExecuteActionsOnStart();
         }
