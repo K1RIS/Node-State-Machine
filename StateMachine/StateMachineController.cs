@@ -1,10 +1,18 @@
 ﻿using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace StateMachine
 {
     public sealed class StateMachineController : SerializedScriptableObject
     {
+        public string[] boolNames = new string[0];
+        public bool[] boolValues = new bool[0];
+        public string[] floatNames = new string[0];
+        public float[] floatValues = new float[0];
+        public string[] intNames = new string[0];
+        public int[] intValues = new int[0];
+
         [SerializeField] private Action[][] actions = new Action[0][];
         [SerializeField] private int[][] transitions = new int[0][];
         [SerializeField] private Duration[] durations = new Duration[0];

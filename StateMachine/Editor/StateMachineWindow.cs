@@ -64,7 +64,7 @@ namespace StateMachine.Editor
                 name = nodesInfo.Names[stateIndex];
                 duration = StateMachineReflections.GetDurations(stateMachine)[stateIndex];
                 actions = StateMachineReflections.GetActions(stateMachine)[stateIndex];
-                
+
                 transitions = new Transition[transitionsIndexes[stateIndex].Length];
                 for (int i = 0; i < transitions.Length; i++)
                     transitions[i] = new Transition("=> " + nodesInfo.Names[transitionsIndexes[stateIndex][i]], isDurationsEnd[stateIndex][i], conditions[stateIndex][i]);
@@ -104,7 +104,7 @@ namespace StateMachine.Editor
                 List<bool> isDurationEnd = new List<bool>(isDurationsEnd[stateIndex]);
                 isDurationEnd.RemoveAt(index);
                 isDurationsEnd[stateIndex] = isDurationEnd.ToArray();
-       
+
                 List<Condition[]> stateConditions = new List<Condition[]>(conditions[stateIndex]);
                 stateConditions.RemoveAt(index);
                 conditions[stateIndex] = stateConditions.ToArray();
@@ -117,12 +117,14 @@ namespace StateMachine.Editor
             }
         }
 
-        private readonly Vector2 STATE_SIZE = new Vector2(150f, 50f);
+        private readonly Vector2 NODE_SIZE = new Vector2(150f, 50f);
+        private readonly float VARIABLES_WINOW_SIZE = 300f;
 
         private GUIStyle startStateStyle;
         private GUIStyle normalStateStyle;
 
         private StateMachineController stateMachine;
+        private SerializedObject serializedObject;
         private NodesInfo nodesInfo;
         [SerializeField, HideInInspector] private List<List<int>> transitions = new List<List<int>>();
         private int startStateIndex;
@@ -130,6 +132,9 @@ namespace StateMachine.Editor
         private Vector2 scrollOffset = Vector2.zero;
         private int draggingStateIndex = -1;
         private int creatingTransitionFromStateIndex = -1;
+
+        private Vector2 variablesScrollPosition;
+
 
         [UnityEditor.Callbacks.OnOpenAsset(0)]
         public static bool OnOpen(int instanceID, int line)
@@ -158,6 +163,8 @@ namespace StateMachine.Editor
             window.minSize = new Vector2(800, 600);
             window.stateMachine = stateMachine;
 
+            window.serializedObject = new SerializedObject(stateMachine);
+
             window.nodesInfo = (NodesInfo)AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(stateMachine), typeof(NodesInfo));
             window.transitions = new List<List<int>>(StateMachineReflections.GetTransitions(stateMachine).Select(i => i.ToList()));
             window.startStateIndex = StateMachineReflections.GetStartStateIndex(stateMachine);
@@ -185,6 +192,11 @@ namespace StateMachine.Editor
             DrawGrid(20, 0.2f, Color.gray);
             DrawGrid(100, 0.4f, Color.gray);
 
+            if (serializedObject == null)
+                serializedObject = new SerializedObject(stateMachine);
+
+            DrawVariablesWindow();
+
             if (nodesInfo == null)
                 return;
 
@@ -199,6 +211,78 @@ namespace StateMachine.Editor
         }
 
         #region Drawers
+        private void DrawVariablesWindow()
+        {
+            Rect availableRect = EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
+            variablesScrollPosition = GUILayout.BeginScrollView(variablesScrollPosition, GUILayout.Width(VARIABLES_WINOW_SIZE));
+            GUI.DrawTexture(new Rect(0, 0, availableRect.width, availableRect.height), EditorGUIUtility.whiteTexture, ScaleMode.StretchToFill);
+
+            if (GUILayout.Button("New Variable"))
+            {
+                GenericMenu menu = new GenericMenu();
+
+                menu.AddItem(new GUIContent("Bool"), false, () => NewVariable("bool"));
+                menu.AddItem(new GUIContent("Float"), false, () => NewVariable("float"));
+                menu.AddItem(new GUIContent("Integer"), false, () => NewVariable("int"));
+
+                menu.ShowAsContext();
+            }
+
+            EditorGUILayout.Space();
+            DrawVariables("Bool Variables", "bool");
+            EditorGUILayout.Space();
+            DrawVariables("Float Variables", "float");
+            EditorGUILayout.Space();
+            DrawVariables("Integer Variables", "int");
+
+            GUILayout.EndScrollView();
+            EditorGUILayout.EndHorizontal();
+            GUI.DrawTexture(new Rect(VARIABLES_WINOW_SIZE, availableRect.y, 2f, availableRect.height), EditorGUIUtility.whiteTexture);
+        }
+
+        private void NewVariable(string type)
+        {
+            SerializedProperty names = serializedObject.FindProperty(type + "Names");
+            SerializedProperty values = serializedObject.FindProperty(type + "Values");
+
+            int index = names.arraySize;
+
+            names.InsertArrayElementAtIndex(index);
+            values.InsertArrayElementAtIndex(index);
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawVariables(string headerText, string variableType)
+        {
+            GUILayout.Label(headerText);
+
+            SerializedProperty names = serializedObject.FindProperty(variableType + "Names");
+            SerializedProperty values = serializedObject.FindProperty(variableType + "Values");
+
+            for (int i = 0; i < names.arraySize; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUI.BeginChangeCheck();
+
+                if (GUILayout.Button("-"))
+                {
+                    names.DeleteArrayElementAtIndex(i);
+                    values.DeleteArrayElementAtIndex(i);
+                }
+                else
+                {
+                    EditorGUILayout.PropertyField(names.GetArrayElementAtIndex(i), GUIContent.none);
+                    EditorGUILayout.PropertyField(values.GetArrayElementAtIndex(i), GUIContent.none);
+                }
+
+                if (EditorGUI.EndChangeCheck())
+                    serializedObject.ApplyModifiedProperties();
+
+                EditorGUILayout.EndHorizontal();
+            }
+        }
+
         private void DrawGrid(float gridSpacing, float gridOpacity, Color gridColor)
         {
             int widthDivs = Mathf.CeilToInt(position.width / gridSpacing);
@@ -319,7 +403,7 @@ namespace StateMachine.Editor
 
             nodesInfo.StatesCount++;
             nodesInfo.Names.Add("New State");
-            nodesInfo.Rects.Add(new Rect(mousePosition, STATE_SIZE));
+            nodesInfo.Rects.Add(new Rect(mousePosition, NODE_SIZE));
 
             transitions.Add(new List<int>());
 
@@ -509,8 +593,8 @@ namespace StateMachine.Editor
                    );
         }
 
-        private Vector2 GetBezierStartPosition(Vector2 statePos) => statePos + Vector2.right * STATE_SIZE.x + Vector2.up * STATE_SIZE.y * .5f;
-        private Vector2 GetBezierEndPosition(Vector2 endPos) => endPos + Vector2.up * STATE_SIZE.y * .5f;
+        private Vector2 GetBezierStartPosition(Vector2 statePos) => statePos + Vector2.right * NODE_SIZE.x + Vector2.up * NODE_SIZE.y * .5f;
+        private Vector2 GetBezierEndPosition(Vector2 endPos) => endPos + Vector2.up * NODE_SIZE.y * .5f;
 
         private void DrawBezier(Vector2 startPos, Vector2 endPos)
         {

@@ -19,18 +19,18 @@ MonoBehaviour:
   - Rotate
   rects:
   - serializedVersion: 2
-    x: 361
-    y: 348
+    x: 511
+    y: 260
     width: 150
     height: 50
   - serializedVersion: 2
-    x: 359
-    y: 182
+    x: 509
+    y: 94
     width: 150
     height: 50
   - serializedVersion: 2
-    x: 370
-    y: 538
+    x: 520
+    y: 450
     width: 150
     height: 50
 --- !u!114 &11400000
@@ -433,4 +433,10 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
+  boolNames: []
+  boolValues: 
+  floatNames: []
+  floatValues: []
+  intNames: []
+  intValues: 
   startStateIndex: 0
